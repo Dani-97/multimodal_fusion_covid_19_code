@@ -135,7 +135,6 @@ def convert_fields(file_data):
 def build_dataset(input_filename):
     headers, file_data = read_csv_file(input_filename)
     list_with_fields_converted = convert_fields(file_data)
-    print(list_with_fields_converted)
 
 def main():
     description = 'Program to build a dataset suitable for classifiers from the \
