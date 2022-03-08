@@ -13,6 +13,14 @@ def convert_si_no_to_int(input):
 
     return output
 
+def convert_dict_to_list(input_dict):
+    values_list = []
+
+    for key_aux, value_aux in input_dict.items():
+        values_list.append(value_aux)
+
+    return values_list
+
 def read_csv_file(input_filename):
     with open(input_filename, 'r') as csv_file:
         line_number = 0

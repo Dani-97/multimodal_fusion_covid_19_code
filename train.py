@@ -2,6 +2,7 @@ import argparse
 from classifiers.utils_classifiers import SVM_Classifier, kNN_Classifier
 from datasets.utils_datasets import Holdout_Split
 from datasets.utils_features import No_Feature_Retrieval, SelectKBest_Feature_Retrieval, PCA_Feature_Retrieval
+from utils import convert_dict_to_list
 
 class UniversalFactory():
 
@@ -15,6 +16,7 @@ class UniversalFactory():
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--experiment_name", help="Name of the experiment", required=True)
     parser.add_argument("--classifier", help="Choose the classifier (SVM, kNN or whatever)", \
                                               choices=['SVM', 'kNN'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
@@ -46,6 +48,7 @@ def main():
     # feature selection (or no feature selection process).
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data)
 
+    log_csv_file = args.experiment_name + '.csv'
     for it in range(0, args.nofrepetitions):
         print('**** Starting repetition number %d...'%it)
         # Split into training and test set
@@ -56,12 +59,20 @@ def main():
         # Creating the classifier with the universal factory.
         kwargs = {'n_neighbors': args.n_neighbors}
         classifier = universal_factory.create_object(globals(), args.classifier + '_Classifier', kwargs)
+
+        if (it==0):
+            classifier.add_headers_to_csv_file(log_csv_file)
+
         classifier.train(input_train_subset, output_train_subset)
         # The function returns the predicted values (i.e., labels such as
         # 1 for positive class and 0 for negative class) and the probabilities
         # output (for example, 0.97).
         classifier_output_pred, classifier_output_prob = classifier.test(input_test_subset)
         metrics_values = classifier.classification_metrics(classifier_output_pred, classifier_output_prob, output_test_subset)
-        classifier.print_classification_performance(metrics_values)
+        metrics_values_list = convert_dict_to_list(metrics_values)
+        # This function will store the number of the current repetition (the value of it)
+        # and the metrics of the current repetition.
+        classifier.store_classification_metrics(it, metrics_values_list, log_csv_file)
+        print('---- NOTE: the logs of this repetition are now stored at %s'%log_csv_file)
 
 main()

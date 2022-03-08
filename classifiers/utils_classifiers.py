@@ -1,3 +1,4 @@
+import csv
 import pickle
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
@@ -48,6 +49,23 @@ class Super_Classifier_Class():
         print('Precision = %.4f'%metrics_values['precision'])
         print('Recall = %.4f'%metrics_values['recall'])
         print('AUC-ROC = %.4f'%metrics_values['auc_roc'])
+
+    # This function adds the headers to the logs csv file.
+    # WARNING: this function overwrites everything from the original csv file!
+    def add_headers_to_csv_file(self, output_filename):
+        with open(output_filename, 'w') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow(['Repetition', 'Accuracy', 'F1-Score', 'Precision', 'Recall', 'AUC-ROC'])
+
+    # This function stores the current repetition followed by 1 row of
+    # metrics_values, a variable that must be a list. The new content will be
+    # appended to the last row of the file.
+    def store_classification_metrics(self, repetition, metrics_values_list, output_filename):
+        with open(output_filename, 'a') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow([repetition] + metrics_values_list)
 
     def save_model(self, filename):
         pickle.dump(self.classifier, open(filename, 'wb'))
