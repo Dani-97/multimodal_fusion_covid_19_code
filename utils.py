@@ -3,6 +3,8 @@ import numpy as np
 
 # This function converts 'Si' to 1 and
 # 'No' to 0. Otherwise, it returns -1.
+# It is defined here in utils because it
+# is a commonly used method.
 def convert_si_no_to_int(input):
     output = -1
 
@@ -107,6 +109,17 @@ def read_csv_file(input_filename, has_headers=True):
             line_number+=1
 
     return headers, file_data
+
+# If headers_to_store is None, then no headers will be written to the CSV file.
+def write_csv_file(output_filename, headers_to_store, data_to_store):
+    with open(output_filename, 'w') as csv_file:
+        csv_writer = csv.writer(csv_file)
+
+        if (headers_to_store!=None):
+            csv_writer.writerow(headers_to_store)
+
+        for row_aux in data_to_store:
+            csv_writer.writerow(row_aux)
 
 def read_headers_file(headers_filename):
     with open(headers_filename) as input_file:
