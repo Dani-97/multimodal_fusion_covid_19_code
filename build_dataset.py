@@ -1,7 +1,8 @@
 import argparse
 from datetime import datetime
 import numpy as np
-from utils import read_csv_file, write_csv_file, convert_si_no_to_int
+from utils import read_csv_file, read_headers_file
+from utils import write_csv_file, convert_si_no_to_int
 
 '''
     NOTE: this code is ad-hoc to the problem herein proposed. Therefore, if
@@ -207,36 +208,37 @@ def convert_fields(file_data):
 
     return output_list
 
-def build_dataset(input_filename):
+def build_dataset(input_filename, headers_file):
     headers, file_data = read_csv_file(input_filename)
     list_with_fields_converted = np.array(convert_fields(file_data))
 
-    indexes = [0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
-                  23, 24, 25, 27, 28, 29, 30]
-    inputs = list_with_fields_converted[:, indexes]
-    outputs = list_with_fields_converted[:, 5].reshape(-1, 1)
+    indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                  23, 24, 25, 27, 28, 29, 30, 5]
+    dataset_rows = list_with_fields_converted[:, indexes]
 
-    return inputs, outputs
+    headers = np.array(read_headers_file(headers_file))
+    # As exitus is selected as the output, the word 'exitus' will be replaced
+    # with output to store it like this in the CSV file.
+    change_exitus_to_output = lambda input: input.replace('exitus', 'output')
+    headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
+
+    return headers_to_store, dataset_rows
 
 def main():
     description = 'Program to build a dataset suitable for classifiers from the \
                        CHUAC COVID-19 machine learning dataset.'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--input_filename', type=str, \
-                            required=True, help='Name of the input CSV file')
+    parser.add_argument('--input_filename', type=str, required=True, \
+                            help='Name of the input CSV file')
+    parser.add_argument('--headers_file', type=str, required=True, \
+                            help='Path of the file where the headers are specified')
     parser.add_argument('--output_directory', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
     args = parser.parse_args()
 
     input_filename = args.input_filename
-    inputs, outputs = build_dataset(input_filename)
-    headers_to_store = ['debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', \
-                        'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', \
-                        'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', \
-                        'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr', \
-                        'debugging_attr', 'debugging_attr', 'debugging_attr', 'debugging_attr']
-    write_csv_file(args.output_directory + '/inputs.csv', headers_to_store, inputs)
-    headers_to_store = ['output']
-    write_csv_file(args.output_directory + '/outputs.csv', headers_to_store, outputs)
+    headers_to_store, dataset_rows = \
+                         build_dataset(input_filename, args.headers_file)
+    write_csv_file(args.output_directory + '/dataset_rows.csv', headers_to_store, dataset_rows)
 
 main()

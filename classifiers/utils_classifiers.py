@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 import pickle
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
@@ -37,7 +38,7 @@ class Super_Classifier_Class():
         metrics_values['precision'] = precision
         recall = recall_score(y_true=target, y_pred=predicted, average='micro')
         metrics_values['recall'] = recall
-        auc_roc = roc_auc_score(y_true=target, y_score=probabilities, multi_class='ovr')
+        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 0], multi_class='ovr')
         metrics_values['auc_roc'] = auc_roc
 
         return metrics_values

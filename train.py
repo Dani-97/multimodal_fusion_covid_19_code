@@ -16,7 +16,7 @@ class UniversalFactory():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_name", help="Name of the experiment", required=True)
+    parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
     parser.add_argument("--classifier", help="Choose the classifier (SVM, kNN or whatever)", \
                                               choices=['SVM', 'kNN'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
@@ -48,7 +48,7 @@ def main():
     # feature selection (or no feature selection process).
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data)
 
-    log_csv_file = args.experiment_name + '.csv'
+    log_csv_file = args.logs_file_path
     for it in range(0, args.nofrepetitions):
         print('**** Starting repetition number %d...'%it)
         # Split into training and test set

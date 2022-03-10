@@ -1,5 +1,30 @@
+import csv
+import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+
+# If has_headers is True, the first row will be retrievd as the row of headers.
+# Otherwise, the headers will be returned as None and, therefore, the whole
+# file will be returned as the body of the CSV.
+def read_csv_file(input_filename, has_headers=True):
+    with open(input_filename, 'r') as csv_file:
+        line_number = 0
+        csv_reader = csv.reader(csv_file, delimiter=',')
+
+        headers = None
+        file_data = []
+        for row in csv_reader:
+            if (has_headers):
+                if (line_number==0):
+                    headers = row
+                else:
+                    file_data.append(row)
+            else:
+                file_data.append(row)
+
+            line_number+=1
+
+    return headers, file_data
 
 # This is the parent of every splitting classes.
 class Super_Splitting_Class():
@@ -7,15 +32,16 @@ class Super_Splitting_Class():
     def __init__(self):
         pass
 
+    # This function assumes that the dataset_path refers to a CSV file. In the
+    # same way, it assumes that the last column of the file refers to the
+    # target output and that the first row of the file has the headers.
     def load_dataset(self, dataset_path):
-        print('DEBUGGING: WARNING! "load_dataset" from SuperSplittingClass is still in testing phase.')
-        print('This implementation is currently being tested with IRIS dataset.')
+        _, file_data = read_csv_file(dataset_path)
+        file_data = np.array(file_data)
 
-        irisData = load_iris()
-
-        # Create feature and target arrays
-        input_data = irisData.data
-        output_data = irisData.target
+        file_data_shape = np.shape(file_data)
+        input_data = file_data[:, 0:file_data_shape[1]-1]
+        output_data = file_data[:, file_data_shape[1]-1]
 
         return input_data, output_data
 
