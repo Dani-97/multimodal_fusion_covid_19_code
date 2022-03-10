@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import confusion_matrix, roc_auc_score
 
 # This is the parent of every classifier models that are going to be
 # implemented for the purposes of this work.
@@ -30,16 +30,23 @@ class Super_Classifier_Class():
     def classification_metrics(self, predicted, probabilities, target):
         metrics_values = {}
 
-        accuracy = accuracy_score(y_true=target, y_pred=predicted)
-        metrics_values['accuracy'] = accuracy
-        f1_score_value = f1_score(y_true=target, y_pred=predicted, average='micro')
-        metrics_values['f1_score'] = f1_score_value
-        precision = precision_score(y_true=target, y_pred=predicted, average='micro')
-        metrics_values['precision'] = precision
-        recall = recall_score(y_true=target, y_pred=predicted, average='micro')
-        metrics_values['recall'] = recall
+        cm = confusion_matrix(y_true=target, y_pred=predicted)
+        # Obtain the coefficients of the confusion_matrix.
+        tn, fp, fn, tp = cm.ravel()
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        recall = tp / (tp + fn)
+        precision = tp / (tp + fp)
+        specificity = tn / (tn + fp)
+        f1_score = 2 * ((precision * recall)/(precision + recall))
         auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 0], multi_class='ovr')
+
+        metrics_values['accuracy'] = accuracy
+        metrics_values['f1_score'] = f1_score
+        metrics_values['precision'] = precision
+        metrics_values['specificity'] = specificity
+        metrics_values['recall'] = recall
         metrics_values['auc_roc'] = auc_roc
+        metrics_values['confusion_matrix'] = cm
 
         return metrics_values
 
@@ -48,16 +55,18 @@ class Super_Classifier_Class():
         print('Accuracy = %.4f'%metrics_values['accuracy'])
         print('F1 Score = %.4f'%metrics_values['f1_score'])
         print('Precision = %.4f'%metrics_values['precision'])
+        print('Specificity = %.4f'%metrics_values['specificity'])
         print('Recall = %.4f'%metrics_values['recall'])
         print('AUC-ROC = %.4f'%metrics_values['auc_roc'])
+        print('Confusion matrix = ', metrics_values['confusion_matrix'])
 
     # This function adds the headers to the logs csv file.
     # WARNING: this function overwrites everything from the original csv file!
-    def add_headers_to_csv_file(self, output_filename):
+    def add_headers_to_csv_file(self, output_filename, headers_list):
         with open(output_filename, 'w') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
 
-            csv_writer.writerow(['Repetition', 'Accuracy', 'F1-Score', 'Precision', 'Recall', 'AUC-ROC'])
+            csv_writer.writerow(['repetition'] + headers_list)
 
     # This function stores the current repetition followed by 1 row of
     # metrics_values, a variable that must be a list. The new content will be
@@ -78,7 +87,7 @@ class SVM_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an SVM classifier')
-        self.classifier = svm.SVC(probability=True)
+        self.classifier = svm.SVC(probability=True, class_weight='balanced')
 
     # The rest of the functions are inherited from the super class.
 

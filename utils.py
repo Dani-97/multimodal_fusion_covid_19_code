@@ -79,13 +79,15 @@ def convert_emtpy_str_to_float(input_string):
 
     return output_converted_value
 
-def convert_dict_to_list(input_dict):
+def convert_metrics_dict_to_list(input_dict):
+    headers_list = []
     values_list = []
 
     for key_aux, value_aux in input_dict.items():
+        headers_list.append(key_aux)
         values_list.append(value_aux)
 
-    return values_list
+    return headers_list, values_list
 
 # If has_headers is True, the first row will be retrievd as the row of headers.
 # Otherwise, the headers will be returned as None and, therefore, the whole
