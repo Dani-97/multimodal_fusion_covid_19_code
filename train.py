@@ -52,7 +52,6 @@ def main():
     kwargs = {}
     preprocessing_module = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
     input_data, output_data = preprocessing_module.execute_preprocessing(input_data, output_data)
-    print('DEBUGGING: shape -> ', np.shape(input_data))
 
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
