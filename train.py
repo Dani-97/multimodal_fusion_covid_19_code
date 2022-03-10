@@ -1,7 +1,9 @@
 import argparse
-from classifiers.utils_classifiers import SVM_Classifier, kNN_Classifier
+from classifiers.utils_classifiers import SVM_Classifier, kNN_Classifier, DT_Classifier
 from datasets.utils_datasets import Holdout_Split
 from datasets.utils_features import No_Feature_Retrieval, SelectKBest_Feature_Retrieval, PCA_Feature_Retrieval
+from datasets.utils_preprocessing import No_Preprocessing, Undersampling_Preprocessing
+import numpy as np
 from utils import convert_metrics_dict_to_list
 
 class UniversalFactory():
@@ -18,8 +20,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
     parser.add_argument("--classifier", help="Choose the classifier (SVM, kNN or whatever)", \
-                                              choices=['SVM', 'kNN'], required=True)
+                                              choices=['SVM', 'kNN', 'DT'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
+    parser.add_argument("--preprocessing", help="This decides the kind of preprocessing to use", required=True, \
+                                              choices=['No', 'Undersampling'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
                                               choices=['No', 'SelectKBest', 'PCA'])
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
@@ -44,9 +48,16 @@ def main():
     feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
 
     input_data, output_data = splitting.load_dataset(args.dataset_path)
+    # Performing the preprocessing on the dataset.
+    kwargs = {}
+    preprocessing_module = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
+    input_data, output_data = preprocessing_module.execute_preprocessing(input_data, output_data)
+    print('DEBUGGING: shape -> ', np.shape(input_data))
+
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data)
+
 
     log_csv_file = args.logs_file_path
     for it in range(0, args.nofrepetitions):
@@ -72,6 +83,8 @@ def main():
         # This function will store the number of the current repetition (the value of it)
         # and the metrics of the current repetition.
         classifier.store_classification_metrics(it, metrics_values_list, log_csv_file)
-        print('---- NOTE: the logs of this repetition are now stored at %s'%log_csv_file)
+        # Here we obtain the explainability of the model if it is available.
+        classifier.explainability()
+        print('---- NOTE: the logs of this repetition are now stored at %s\n'%log_csv_file)
 
 main()

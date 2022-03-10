@@ -1,7 +1,8 @@
 import csv
+import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-from sklearn import svm
+from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 
@@ -38,7 +39,7 @@ class Super_Classifier_Class():
         precision = tp / (tp + fp)
         specificity = tn / (tn + fp)
         f1_score = 2 * ((precision * recall)/(precision + recall))
-        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 0], multi_class='ovr')
+        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 0])
 
         metrics_values['accuracy'] = accuracy
         metrics_values['f1_score'] = f1_score
@@ -83,6 +84,12 @@ class Super_Classifier_Class():
     def load_model(self, filename):
         self.classifier = pickle.load(open(filename, 'rb'))
 
+    # This function must be reimplemented by those classifiers with
+    # explainability. By default, it displays a message that shows that the
+    # used model has not explainability.
+    def explainability(self):
+        print('++++ WARNING: this model does not have explainability options')
+
 class SVM_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
@@ -96,5 +103,19 @@ class kNN_Classifier(Super_Classifier_Class):
     def __init__(self, **kwargs):
         print('++++ Creating a kNN classifier')
         self.classifier = KNeighborsClassifier(n_neighbors=kwargs['n_neighbors'])
+
+    # The rest of the functions are inherited from the super class.
+
+class DT_Classifier(Super_Classifier_Class):
+
+    def __init__(self, **kwargs):
+        print('++++ Creating a DT classifier')
+        self.classifier = tree.DecisionTreeClassifier(max_depth=3)
+
+    def explainability(self):
+        print('++++ The explainability of this model is available\n')
+        rules = tree.export_text(self.classifier)
+        print('##### Rules of the decision tree #####\n')
+        print(rules)
 
     # The rest of the functions are inherited from the super class.
