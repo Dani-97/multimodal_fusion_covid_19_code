@@ -39,7 +39,7 @@ class Super_Classifier_Class():
         precision = tp / (tp + fp)
         specificity = tn / (tn + fp)
         f1_score = 2 * ((precision * recall)/(precision + recall))
-        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 0])
+        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 1])
 
         metrics_values['accuracy'] = accuracy
         metrics_values['f1_score'] = f1_score

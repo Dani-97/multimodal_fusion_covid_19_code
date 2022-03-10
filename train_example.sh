@@ -1,0 +1,1 @@
+python3 train.py --logs_file_path ../debugging.csv --classifier DT --dataset_path ../built_dataset/dataset_rows.csv --preprocessing Undersampling --feature_retrieval PCA --splitting Holdout --test_size 0.3 --nofrepetitions 5 --nofcomponents 20 --n_neighbors 2

@@ -27,9 +27,9 @@ def convert_rango_edad(input_value):
 
     if (input_value=='<65'):
         output_value = 0
-    elif (input_value=='[65, 80]'):
+    elif (input_value=='[65,80]'):
         output_value = 1
-    elif (input_value=='[>80]'):
+    elif (input_value=='>80'):
         output_value = 2
 
     return output_value
@@ -222,7 +222,14 @@ def build_dataset(input_filename, headers_file):
     change_exitus_to_output = lambda input: input.replace('exitus', 'output')
     headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
 
-    return headers_to_store, dataset_rows
+    dataset_rows = np.array(dataset_rows).astype(np.str)
+    # Removing duplicated data.
+    dataset_rows = np.unique(dataset_rows, axis=0)
+    # Removing all "Control" cases.
+    non_control_cases_indexes = np.where(dataset_rows[:, indexes[0]]!='-1')
+    dataset_rows = dataset_rows[non_control_cases_indexes]
+
+    return headers_to_store, np.unique(dataset_rows, axis=0)
 
 def main():
     description = 'Program to build a dataset suitable for classifiers from the \

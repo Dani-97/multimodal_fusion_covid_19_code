@@ -29,13 +29,19 @@ def main():
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
                                               choices=['Holdout'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select in the case of using SelectKBest feature selection algorithm", type=int)
+    parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
     parser.add_argument('--nofrepetitions', help="Number of times that the trainig process must be performed", type=int, required=True)
     parser.add_argument("--n_neighbors", help="Number of neighbors in case of training a kNN classifier", type=int)
     parser.add_argument("--test_size", help="Size of the the test subset (in percentage) in case of using Holdout", type=float)
+    parser.add_argument("--plot_data", action='store_true', \
+                           help="This argument indicates that we want to plot the data if possible (in case it is 2D or 3D)")
     args = parser.parse_args()
 
     if ((args.classifier=='kNN') and (args.n_neighbors is None)):
         print('++++ ERROR: if you choose the kNN algorithm, you need to specify the --n_neighbors argument')
+        exit(-1)
+    if ((args.feature_retrieval=='PCA') and (args.nofcomponents is None)):
+        print('++++ ERROR: if you choose the PCA algorithm, you need to specify the --nofcomponents argument')
         exit(-1)
 
     universal_factory = UniversalFactory()
@@ -44,7 +50,7 @@ def main():
     kwargs = {'test_size': args.test_size}
     splitting = universal_factory.create_object(globals(), args.splitting + '_Split', kwargs)
     # Retrieving the feature selection method with the universal factory.
-    kwargs = {'noftopfeatures': args.noftopfeatures}
+    kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
     feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
 
     input_data, output_data = splitting.load_dataset(args.dataset_path)
@@ -55,8 +61,7 @@ def main():
 
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
-    input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data)
-
+    input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data, plot_data=args.plot_data)
 
     log_csv_file = args.logs_file_path
     for it in range(0, args.nofrepetitions):

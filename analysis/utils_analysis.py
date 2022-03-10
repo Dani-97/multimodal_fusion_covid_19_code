@@ -66,34 +66,55 @@ class Obtain_Histogram_Attr_0(SuperClass_Obtain_Histogram):
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
 
-class Obtain_Histogram_Attr_5(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_1(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
 
-class Obtain_Histogram_Attr_7(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_2(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
 
-class Obtain_Histogram_Attr_8(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_3(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
 
-class Obtain_Histogram_Attr_9(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-
-class Obtain_Histogram_Attr_10(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_4(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
         super().set_hide_labels(True)
         super().set_x_axis_visibility(False)
 
-class Obtain_Histogram_Attr_11(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_5(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+
+class Obtain_Histogram_Attr_6(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+
+class Obtain_Histogram_Attr_7(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+
+class Obtain_Histogram_Attr_8(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+
+class Obtain_Histogram_Attr_X(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
@@ -124,7 +145,7 @@ class Obtain_Histogram_Attr_11(SuperClass_Obtain_Histogram):
         plt.savefig(output_filename)
         plt.close()
 
-class Obtain_Histogram_Attr_12(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_X(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
@@ -157,7 +178,7 @@ class Obtain_Histogram_Attr_12(SuperClass_Obtain_Histogram):
         plt.savefig(output_filename)
         plt.close()
 
-class Obtain_Histogram_Attr_13(SuperClass_Obtain_Histogram):
+class Obtain_Histogram_Attr_X(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
@@ -189,6 +210,31 @@ class Obtain_Histogram_Attr_13(SuperClass_Obtain_Histogram):
         plt.title(self.title)
         plt.savefig(output_filename)
         plt.close()
+
+class Obtain_Histogram_Attr_9(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+
+class Obtain_Histogram_Attr_10(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+
+class Obtain_Histogram_Attr_11(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+
+class Obtain_Histogram_Attr_12(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
+
+class Obtain_Histogram_Attr_13(SuperClass_Obtain_Histogram):
+
+    def __init__(self, nofattribute, title, nofbins):
+        super().__init__(nofattribute, title, nofbins)
 
 class Obtain_Histogram_Attr_14(SuperClass_Obtain_Histogram):
 
@@ -239,26 +285,41 @@ class Obtain_Histogram_Attr_23(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+        super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_24(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+        super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_25(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+        super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_26(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+        super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_27(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
+        super().set_hide_labels(True)
+        super().set_x_axis_visibility(False)
+        super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_28(SuperClass_Obtain_Histogram):
 
@@ -277,46 +338,6 @@ class Obtain_Histogram_Attr_29(SuperClass_Obtain_Histogram):
         super().set_log_scale(True)
 
 class Obtain_Histogram_Attr_30(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-        super().set_hide_labels(True)
-        super().set_x_axis_visibility(False)
-        super().set_log_scale(True)
-
-class Obtain_Histogram_Attr_32(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-        super().set_hide_labels(True)
-        super().set_x_axis_visibility(False)
-        super().set_log_scale(True)
-
-class Obtain_Histogram_Attr_33(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-        super().set_hide_labels(True)
-        super().set_x_axis_visibility(False)
-        super().set_log_scale(True)
-
-class Obtain_Histogram_Attr_34(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-        super().set_hide_labels(True)
-        super().set_x_axis_visibility(False)
-        super().set_log_scale(True)
-
-class Obtain_Histogram_Attr_35(SuperClass_Obtain_Histogram):
-
-    def __init__(self, nofattribute, title, nofbins):
-        super().__init__(nofattribute, title, nofbins)
-        super().set_hide_labels(True)
-        super().set_x_axis_visibility(False)
-        super().set_log_scale(True)
-
-class Obtain_Histogram_Attr_36(SuperClass_Obtain_Histogram):
 
     def __init__(self, nofattribute, title, nofbins):
         super().__init__(nofattribute, title, nofbins)
