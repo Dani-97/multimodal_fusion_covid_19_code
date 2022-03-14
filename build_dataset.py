@@ -1,8 +1,19 @@
 import argparse
 from datetime import datetime
+import matplotlib.pyplot as plt
 import numpy as np
 from utils import read_csv_file, read_headers_file
 from utils import write_csv_file, convert_si_no_to_int
+
+class UniversalFactory():
+
+    def __init__(self):
+        pass
+
+    def create_object(self, namespace, classname, kwargs):
+        ClassName = namespace[classname]
+        universal_obj = ClassName(**kwargs)
+        return universal_obj
 
 '''
     NOTE: this code is ad-hoc to the problem herein proposed. Therefore, if
@@ -183,13 +194,13 @@ def convert_fields(file_data):
                     row_list_aux.append(convert_integer_attributes(field))
                 # ldh
                 if (column_number_aux==31):
-                    row_list_aux.append(field)
+                    row_list_aux.append(convert_integer_attributes(field))
                 # creatinina
                 if (column_number_aux==32):
-                    row_list_aux.append(field)
+                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
                 # filtrado_glomerular_estimado
                 if (column_number_aux==33):
-                    row_list_aux.append(field)
+                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
                 # prc
                 if (column_number_aux==34):
                     row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
@@ -198,7 +209,7 @@ def convert_fields(file_data):
                     row_list_aux.append(convert_integer_attributes(field))
                 # il6
                 if (column_number_aux==36):
-                    row_list_aux.append(field)
+                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
             except:
                 row_list_aux.append(field)
 
@@ -208,28 +219,145 @@ def convert_fields(file_data):
 
     return output_list
 
-def build_dataset(input_filename, headers_file):
-    headers, file_data = read_csv_file(input_filename)
-    list_with_fields_converted = np.array(convert_fields(file_data))
+def plot_missing_values_histogram(nof_missing_values_per_row):
+    fig, ax = plt.subplots()
+    plt.hist(np.array(nof_missing_values_per_row), \
+                    bins=len(np.unique(np.array(nof_missing_values_per_row))), \
+                        rwidth=0.7)
 
-    indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
-                  23, 24, 25, 27, 28, 29, 30, 5]
-    dataset_rows = list_with_fields_converted[:, indexes]
+    frequencies = np.unique(np.array(nof_missing_values_per_row))
+    rects = ax.patches
+    x_axis = []
+    for rect_aux in rects:
+        height = rect_aux.get_height()
+        ax.text(rect_aux.get_x() + rect_aux.get_width() / 2, height+0.01, int(height),
+                ha='center', va='bottom')
+        x_axis.append(rect_aux.get_x() + rect_aux.get_width() / 2)
 
-    headers = np.array(read_headers_file(headers_file))
-    # As exitus is selected as the output, the word 'exitus' will be replaced
-    # with output to store it like this in the CSV file.
-    change_exitus_to_output = lambda input: input.replace('exitus', 'output')
-    headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
+    plt.title('Cantidad de filas que tienen un número determinado de missing values')
+    plt.xlabel('Número de missing values')
+    plt.ylabel('Número de filas')
+    ax.set_xticks(x_axis, frequencies)
+    plt.savefig('missing_values_dist.pdf')
 
-    dataset_rows = np.array(dataset_rows).astype(np.str)
-    # Removing duplicated data.
-    dataset_rows = np.unique(dataset_rows, axis=0)
-    # Removing all "Control" cases.
-    non_control_cases_indexes = np.where(dataset_rows[:, indexes[0]]!='-1')
-    dataset_rows = dataset_rows[non_control_cases_indexes]
+# This function removes those registers that have all the fields missing.
+def remove_useless_data(dataset_rows, attr_columns_to_check):
+    indexes = attr_columns_to_check
+    # This list will store the indexes of those rows that do not have useless
+    # data.
+    useful_rows = []
+    nof_useless_rows = 0
+    nof_missing_values_per_row = []
 
-    return headers_to_store, np.unique(dataset_rows, axis=0)
+    tmp_dataset_rows = np.copy(dataset_rows)
+    tmp_dataset_rows = tmp_dataset_rows.astype(np.float64).astype(str)[:, indexes]
+    nofrow_aux = 0
+    for row_aux in tmp_dataset_rows:
+        unique_values = np.unique(row_aux)
+        nof_missing_values_aux = row_aux.tolist().count('-1.0')
+        if ((len(unique_values)==1) and (unique_values[0]=='-1.0')):
+            nof_useless_rows+=1
+        else:
+            if (nof_missing_values_aux>0):
+                nof_missing_values_per_row.append(nof_missing_values_aux)
+            useful_rows.append(nofrow_aux)
+        nofrow_aux+=1
+
+    dataset_rows = dataset_rows[useful_rows, :]
+
+    print('**** There were %d useless rows that have been deleted.'%nof_useless_rows)
+
+    return dataset_rows
+
+class Build_Dataset_Hospitalized_And_Urgencies():
+
+    def __init__(self):
+        pass
+
+    def build_dataset(self, input_filename, headers_file):
+        headers, file_data = read_csv_file(input_filename)
+        list_with_fields_converted = np.array(convert_fields(file_data))
+
+        indexes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                      23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 7]
+        hospitalized_cases_indexes = np.where(np.array(file_data)[:, 7]=='Hospitalizados')
+        urgencies_cases_indexes = np.where(np.array(file_data)[:, 7]=='Urgencias')
+        # This refers to the cases of the hospitalized and the urgencies
+        # patients.
+        selected_cases_indexes = \
+            np.concatenate((urgencies_cases_indexes, hospitalized_cases_indexes), axis=1)
+
+        dataset_rows = list_with_fields_converted[:, indexes]
+        dataset_rows = np.array(dataset_rows).astype(str)
+
+        # For this problem, the class 2 (i.e. "Urgencias") must be converted to
+        # class 1.
+        dataset_rows_shape = np.shape(dataset_rows)
+        last_item_index = dataset_rows_shape[1]-1
+        convert_urgencies_to_class_1 = \
+            lambda input: input.replace('2', '1')
+        # Obtaining the index to select the output column.
+        dataset_rows[:, last_item_index] = \
+            np.array(list(map(convert_urgencies_to_class_1, dataset_rows[:, last_item_index])))
+
+        # Using only the selected patients to build the dataset.
+        dataset_rows = dataset_rows[selected_cases_indexes, :]
+
+        headers = np.array(read_headers_file(headers_file))
+        # As cohort is selected as the output, the word 'cohort' will be replaced
+        # with output to store it like this in the CSV file.
+        change_cohort_to_output = lambda input: input.replace('cohorte', 'output')
+        headers_to_store = list(map(change_cohort_to_output, headers[indexes]))
+
+        # Removing duplicated data.
+        dataset_rows = np.unique(dataset_rows[0], axis=0)
+
+        # As some of the attributes are previously removed, the indexes change and
+        # therefore they must be specified again.
+        new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
+                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+
+        return headers_to_store, dataset_rows
+
+class Build_Dataset_Only_Hospitalized():
+
+    def __init__(self):
+        pass
+
+    def build_dataset(self, input_filename, headers_file):
+        headers, file_data = read_csv_file(input_filename)
+        list_with_fields_converted = np.array(convert_fields(file_data))
+
+        indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                      23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
+        hospitalized_cases_indexes = np.where(np.array(file_data)[:, indexes[0]]=='Hospitalizados')
+        dataset_rows = list_with_fields_converted[:, indexes]
+        dataset_rows = np.array(dataset_rows).astype(str)
+
+        # Using only the "Hospitalized" patients to build the dataset.
+        dataset_rows = dataset_rows[hospitalized_cases_indexes, :]
+
+        headers = np.array(read_headers_file(headers_file))
+        # As exitus is selected as the output, the word 'exitus' will be replaced
+        # with output to store it like this in the CSV file.
+        change_exitus_to_output = lambda input: input.replace('exitus', 'output')
+        headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
+
+        # Removing duplicated data.
+        dataset_rows = np.unique(dataset_rows[0], axis=0)
+
+        # Remove the cohort, because it is not necessary in this particular case.
+        headers_to_store = headers_to_store[1:]
+        dataset_rows = dataset_rows[:, 1:]
+
+        # As some of the attributes are previously removed, the indexes change and
+        # therefore they must be specified again.
+        new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
+                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+
+        return headers_to_store, dataset_rows
 
 def main():
     description = 'Program to build a dataset suitable for classifiers from the \
@@ -239,13 +367,22 @@ def main():
                             help='Name of the input CSV file')
     parser.add_argument('--headers_file', type=str, required=True, \
                             help='Path of the file where the headers are specified')
-    parser.add_argument('--output_directory', type=str, required=True,
+    parser.add_argument('--approach', type=str, required=True, \
+                            choices=['Only_Hospitalized', 'Hospitalized_And_Urgencies'], \
+                            help='This specifies the selected approach')
+    parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
     args = parser.parse_args()
 
+    universal_factory = UniversalFactory()
+
+    kwargs = {}
+    selected_approach = universal_factory.create_object(globals(), \
+                                      'Build_Dataset_' + args.approach, kwargs)
+
     input_filename = args.input_filename
     headers_to_store, dataset_rows = \
-                         build_dataset(input_filename, args.headers_file)
-    write_csv_file(args.output_directory + '/dataset_rows.csv', headers_to_store, dataset_rows)
+                selected_approach.build_dataset(input_filename, args.headers_file)
+    write_csv_file(args.output_path, headers_to_store, dataset_rows)
 
 main()

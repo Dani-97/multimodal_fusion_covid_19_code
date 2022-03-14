@@ -123,6 +123,12 @@ def write_csv_file(output_filename, headers_to_store, data_to_store):
         for row_aux in data_to_store:
             csv_writer.writerow(row_aux)
 
+# This function removes everything from a specific CSV file.
+def clear_csv_file(csv_file_path):
+    input_csv_file = open(csv_file_path, 'w')
+    input_csv_file.truncate()
+    input_csv_file.close()
+
 def read_headers_file(headers_filename):
     with open(headers_filename) as input_file:
         lines = input_file.readlines()

@@ -1,7 +1,9 @@
+import csv
 import numpy as np
+from ReliefF import ReliefF
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
+from sklearn.feature_selection import f_classif
 import matplotlib.pyplot as plt
 
 def plot_2D_distribution(input_data, output_data):
@@ -43,6 +45,13 @@ class Super_Feature_Retrieval():
         if (plot_data):
             plot_features_distribution(input_data, output_data)
 
+    # This function stores in a csv file the report of the feature selection
+    # or feature extraction process. By default, in this super class, it does
+    # not do anything, so it works like an abstract method that must be
+    # overwritten by the child class.
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        pass
+
 # An object of this class will be instantiated if no feature selection was
 # chosen.
 class No_Feature_Retrieval(Super_Feature_Retrieval):
@@ -58,20 +67,50 @@ class No_Feature_Retrieval(Super_Feature_Retrieval):
 
         return input_data
 
-class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        pass
+
+class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
 
     def __init__(self, **kwargs):
-        print('++++ The SelectKBest has been chosen for feature selection')
+        print('++++ The ReliefF algorithm has been chosen for feature selection')
         self.noftopfeatures = kwargs['noftopfeatures']
         print('---- Number of top features: %d'%self.noftopfeatures)
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         super().execute_feature_retrieval(input_data, output_data, plot_data)
-        output_selection = SelectKBest(chi2, \
-                                  k=self.noftopfeatures).fit_transform(\
-                                                      input_data, output_data)
+        reliefF_algorithm = ReliefF(n_neighbors=5, n_features_to_keep=self.noftopfeatures)
+        input_data = input_data.astype(np.float64)
+        output_data = output_data.astype(np.float64)
+        output_selection = reliefF_algorithm.fit_transform(input_data[:, :], output_data)
+        self.reliefF_report = reliefF_algorithm.__dict__
 
         return output_selection
+
+    def __give_names_to_features(self, attrs_headers, top_features_list):
+        top_features_with_names_list = []
+
+        for item_aux in top_features_list:
+            item_with_name_aux = item_aux + ': ' + attrs_headers[int(item_aux)]
+            top_features_with_names_list.append(item_with_name_aux)
+
+        return top_features_with_names_list
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        if (append):
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        with open(csv_file_path, file_mode) as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            top_features = np.array(self.reliefF_report['top_features']).astype(str)
+            top_features_with_names = \
+                    self.__give_names_to_features(attrs_headers, top_features)
+            csv_writer.writerow(['top_features'])
+            csv_writer.writerow(top_features_with_names)
+            csv_writer.writerow([])
 
 class PCA_Feature_Retrieval(Super_Feature_Retrieval):
 
@@ -88,3 +127,6 @@ class PCA_Feature_Retrieval(Super_Feature_Retrieval):
         super().execute_feature_retrieval(transformed_data, output_data, plot_data)
 
         return transformed_data
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        print('+++++ WARNING: this method is still not implemented for PCA!')

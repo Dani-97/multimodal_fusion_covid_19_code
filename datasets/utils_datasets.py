@@ -36,14 +36,14 @@ class Super_Splitting_Class():
     # same way, it assumes that the last column of the file refers to the
     # target output and that the first row of the file has the headers.
     def load_dataset(self, dataset_path):
-        _, file_data = read_csv_file(dataset_path)
+        headers, file_data = read_csv_file(dataset_path)
         file_data = np.array(file_data)
 
         file_data_shape = np.shape(file_data)
         input_data = file_data[:, 0:file_data_shape[1]-1]
         output_data = file_data[:, file_data_shape[1]-1]
 
-        return input_data, output_data
+        return headers, input_data, output_data
 
 class Holdout_Split(Super_Splitting_Class):
 

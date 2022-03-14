@@ -1,10 +1,11 @@
 import argparse
-from classifiers.utils_classifiers import SVM_Classifier, kNN_Classifier, DT_Classifier
-from datasets.utils_datasets import Holdout_Split
-from datasets.utils_features import No_Feature_Retrieval, SelectKBest_Feature_Retrieval, PCA_Feature_Retrieval
-from datasets.utils_preprocessing import No_Preprocessing, Undersampling_Preprocessing
+from classifiers.utils_classifiers import *
+import csv
+from datasets.utils_datasets import *
+from datasets.utils_features import *
+from datasets.utils_balancing import *
 import numpy as np
-from utils import convert_metrics_dict_to_list
+from utils import convert_metrics_dict_to_list, clear_csv_file
 
 class UniversalFactory():
 
@@ -22,10 +23,10 @@ def main():
     parser.add_argument("--classifier", help="Choose the classifier (SVM, kNN or whatever)", \
                                               choices=['SVM', 'kNN', 'DT'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
-    parser.add_argument("--preprocessing", help="This decides the kind of preprocessing to use", required=True, \
-                                              choices=['No', 'Undersampling'])
+    parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
+                                              choices=['No', 'Oversampling', 'Undersampling'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
-                                              choices=['No', 'SelectKBest', 'PCA'])
+                                              choices=['No', 'PCA', 'ReliefF'])
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
                                               choices=['Holdout'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select in the case of using SelectKBest feature selection algorithm", type=int)
@@ -43,7 +44,11 @@ def main():
     if ((args.feature_retrieval=='PCA') and (args.nofcomponents is None)):
         print('++++ ERROR: if you choose the PCA algorithm, you need to specify the --nofcomponents argument')
         exit(-1)
+    if ((args.feature_retrieval=='RBFSampler') and (args.nofcomponents is None)):
+        print('++++ ERROR: if you choose RBFSampler algorithm, you need to specify the --nofcomponents argument')
+        exit(-1)
 
+    log_csv_file = args.logs_file_path
     universal_factory = UniversalFactory()
 
     # Creating the splitting object with the universal factory.
@@ -53,23 +58,31 @@ def main():
     kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
     feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
 
-    input_data, output_data = splitting.load_dataset(args.dataset_path)
-    # Performing the preprocessing on the dataset.
-    kwargs = {}
-    preprocessing_module = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
-    input_data, output_data = preprocessing_module.execute_preprocessing(input_data, output_data)
+    attrs_headers, input_data, output_data = splitting.load_dataset(args.dataset_path)
 
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data, plot_data=args.plot_data)
+    # If the CSV logs file had previous content, then this function will remove
+    # it.
+    clear_csv_file(log_csv_file)
+    # This function will store the report of the feature selection process if it
+    # is available.
+    feature_retrieval.store_report(log_csv_file, attrs_headers)
 
-    log_csv_file = args.logs_file_path
     for it in range(0, args.nofrepetitions):
         print('**** Starting repetition number %d...'%it)
         # Split into training and test set
         subsets = splitting.split(input_data, output_data)
         input_train_subset, input_test_subset, \
                              output_train_subset, output_test_subset = subsets
+
+        # Performing the balancing on the dataset.
+        kwargs = {}
+        balancing_module = \
+                universal_factory.create_object(globals(), args.balancing + '_Balancing', kwargs)
+        input_train_subset, output_train_subset = \
+                balancing_module.execute_balancing(input_train_subset, output_train_subset)
 
         # Creating the classifier with the universal factory.
         kwargs = {'n_neighbors': args.n_neighbors}
@@ -90,5 +103,9 @@ def main():
         # Here we obtain the explainability of the model if it is available.
         classifier.explainability()
         print('---- NOTE: the logs of this repetition are now stored at %s\n'%log_csv_file)
+
+    # Lastly, the mean and the standard deviation of the metrics obtained for
+    # all the repetitions are stored at the end of the CSV file.
+    classifier.compute_mean_and_std_performance(log_csv_file)
 
 main()
