@@ -362,6 +362,45 @@ class Build_Dataset_Only_Hospitalized():
 
         return headers_to_store, dataset_rows
 
+class Build_Dataset_Only_Urgencies():
+
+    def __init__(self):
+        pass
+
+    def build_dataset(self, input_filename, headers_file):
+        headers, file_data = read_csv_file(input_filename)
+        list_with_fields_converted = np.array(convert_fields(file_data))
+
+        indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                      23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
+        hospitalized_cases_indexes = np.where(np.array(file_data)[:, indexes[0]]=='Urgencias')
+        dataset_rows = list_with_fields_converted[:, indexes]
+        dataset_rows = np.array(dataset_rows).astype(str)
+
+        # Using only the "Hospitalized" patients to build the dataset.
+        dataset_rows = dataset_rows[hospitalized_cases_indexes, :]
+
+        headers = np.array(read_headers_file(headers_file))
+        # As exitus is selected as the output, the word 'exitus' will be replaced
+        # with output to store it like this in the CSV file.
+        change_exitus_to_output = lambda input: input.replace('exitus', 'output')
+        headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
+
+        # Removing duplicated data.
+        dataset_rows = np.unique(dataset_rows[0], axis=0)
+
+        # Remove the cohort, because it is not necessary in this particular case.
+        headers_to_store = headers_to_store[1:]
+        dataset_rows = dataset_rows[:, 1:]
+
+        # As some of the attributes are previously removed, the indexes change and
+        # therefore they must be specified again.
+        new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
+                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+
+        return headers_to_store, dataset_rows
+
 class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
 
     def __init__(self):
@@ -435,9 +474,8 @@ def main():
     parser.add_argument('--headers_file', type=str, required=True, \
                             help='Path of the file where the headers are specified')
     parser.add_argument('--approach', type=str, required=True, \
-        choices=['Only_Hospitalized', 'Only_Hospitalized_With_Urgency_Time', \
-                                     'Hospitalized_And_Urgencies'], \
-                            help='This specifies the selected approach')
+        choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
+                 'Hospitalized_And_Urgencies'], help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
     args = parser.parse_args()

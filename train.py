@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
     parser.add_argument("--model", help="Choose the model (SVM, kNN or whatever, that can be a classifier or a regressor)", \
                             choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', \
-                                     'SVM_Regressor'], required=True)
+                                     'SVM_Regressor', 'Linear_Regressor'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling'])

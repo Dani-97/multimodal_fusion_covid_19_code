@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+from sklearn import linear_model
 from sklearn.svm import SVR
 
 # This is the parent of every regression models that are going to be
@@ -20,7 +21,7 @@ class Super_Regressor_Class():
 
     def model_metrics(self, predicted, target):
         metrics_values = {}
-        
+
         mae_values = np.abs(np.subtract(predicted, target))
         mse_values = np.square(np.subtract(predicted, target))
 
@@ -76,5 +77,13 @@ class SVM_Regressor(Super_Regressor_Class):
     def __init__(self, **kwargs):
         print('++++ Creating an SVM regression')
         self.regressor = SVR(C=1.0, epsilon=0.2)
+
+    # The rest of the methods are inherited from the parent class.
+
+class Linear_Regressor(Super_Regressor_Class):
+
+    def __init__(self, **kwargs):
+        print('++++ Creating a Linear regression')
+        self.regressor = linear_model.LinearRegression()
 
     # The rest of the methods are inherited from the parent class.

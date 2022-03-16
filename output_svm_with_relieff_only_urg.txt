@@ -1,0 +1,103 @@
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:41: RuntimeWarning: invalid value encountered in long_scalars
+  precision = tp / (tp + fp)
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:41: RuntimeWarning: invalid value encountered in long_scalars
+  precision = tp / (tp + fp)
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:41: RuntimeWarning: invalid value encountered in long_scalars
+  precision = tp / (tp + fp)
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:41: RuntimeWarning: invalid value encountered in long_scalars
+  precision = tp / (tp + fp)
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:41: RuntimeWarning: invalid value encountered in long_scalars
+  precision = tp / (tp + fp)
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 1
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 170 samples; Class 1 -> 170 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 171 samples; Class 1 -> 171 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 170 samples; Class 1 -> 170 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 172 samples; Class 1 -> 172 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 173 samples; Class 1 -> 173 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_1_feature_ReliefF_oversampling_results.csv
+
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:43: RuntimeWarning: invalid value encountered in double_scalars
+  f1_score = 2 * ((precision * recall)/(precision + recall))
+/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py:40: RuntimeWarning: invalid value encountered in long_scalars
+  recall = tp / (tp + fn)
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 2
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 174 samples; Class 1 -> 174 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_urgencies/dt_2_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 169 samples; Class 1 -> 169 samples
+
+++++ Creating an SVM classifier
+Traceback (most recent call last):
+  File "train.py", line 118, in <module>
+    main()
+  File "train.py", line 103, in main
+    metrics_values = model.model_metrics(model_output_pred, output_test_subset)
+  File "/home/dani/Documents/tabla_chuac/chuac_covid19/classifiers/utils_classifiers.py", line 44, in model_metrics
+    auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 1])
+  File "/home/dani/.local/lib/python3.8/site-packages/sklearn/metrics/_ranking.py", line 567, in roc_auc_score
+    return _average_binary_score(
+  File "/home/dani/.local/lib/python3.8/site-packages/sklearn/metrics/_base.py", line 75, in _average_binary_score
+    return binary_metric(y_true, y_score, sample_weight=sample_weight)
+  File "/home/dani/.local/lib/python3.8/site-packages/sklearn/metrics/_ranking.py", line 337, in _binary_roc_auc_score
+    raise ValueError(
+ValueError: Only one class present in y_true. ROC AUC score is not defined in that case.
