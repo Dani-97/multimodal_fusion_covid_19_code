@@ -80,8 +80,11 @@ def convert_double_attributes(input_value):
     return output_value
 
 # This function is valid for an important amount of attributes.
-def convert_si_no_desconocido_missing_to_integer(input_value):
-    output_value = -1
+# "padding_for missing_values" will determine what value will be in those cells
+# with missing values in the original dataset.
+def convert_si_no_desconocido_missing_to_integer(input_value, \
+                                                padding_for_missing_values=-1):
+    output_value = padding_for_missing_values
 
     if (input_value=='No'):
         output_value = 0
@@ -91,8 +94,9 @@ def convert_si_no_desconocido_missing_to_integer(input_value):
     return output_value
 
 # This function allows to convert the fields to the desired format.
-# This is an ad-hoc function.
-def convert_fields(file_data):
+# This is an ad-hoc function. "padding_for missing_values" will determine what
+# value will be in those cells with missing values in the original dataset.
+def convert_fields(file_data, padding_for_missing_values=-1):
     output_list = []
     for item_aux in file_data:
         row_list_aux = []
@@ -146,46 +150,60 @@ def convert_fields(file_data):
                     row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
                 # hta
                 if (column_number_aux==14):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # diabetes_mellitus
                 if (column_number_aux==15):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # epoc
                 if (column_number_aux==16):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # asma
                 if (column_number_aux==17):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # hepatopatia
                 if (column_number_aux==18):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # leucemia
                 if (column_number_aux==19):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # linfoma
                 if (column_number_aux==20):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # neoplasia
                 if (column_number_aux==21):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # hiv
                 if (column_number_aux==22):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # transplante_organo_solido
                 if (column_number_aux==23):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # quimioterapia_ultimos_3_meses
                 if (column_number_aux==24):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # biologicos_ultimos_3_meses
                 if (column_number_aux==25):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # biologicos_cuales
                 if (column_number_aux==26):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # corticoides_cronicos_mas_3_meses
                 if (column_number_aux==27):
-                    row_list_aux.append(convert_si_no_desconocido_missing_to_integer(field))
+                    converted_value = convert_si_no_desconocido_missing_to_integer(field, padding_for_missing_values)
+                    row_list_aux.append(converted_value)
                 # linfocitos
                 if (column_number_aux==28):
                     row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
@@ -244,7 +262,7 @@ def plot_missing_values_histogram(nof_missing_values_per_row):
     plt.savefig('missing_values_dist.pdf')
 
 # This function removes those registers that have all the fields missing.
-def remove_useless_data(dataset_rows, attr_columns_to_check):
+def remove_useless_data(dataset_rows, attr_columns_to_check, padding_missing_values=-1):
     indexes = attr_columns_to_check
     # This list will store the indexes of those rows that do not have useless
     # data.
@@ -257,8 +275,10 @@ def remove_useless_data(dataset_rows, attr_columns_to_check):
     nofrow_aux = 0
     for row_aux in tmp_dataset_rows:
         unique_values = np.unique(row_aux)
-        nof_missing_values_aux = row_aux.tolist().count('-1.0')
-        if ((len(unique_values)==1) and (unique_values[0]=='-1.0')):
+        # "padding_missing_values" is first converted to float to ensure that,
+        # for example, "-1" is converted to "-1.0".
+        nof_missing_values_aux = row_aux.tolist().count(str(float(padding_missing_values)))
+        if ((len(unique_values)==1) and (unique_values[0]==str(float(padding_missing_values)))):
             nof_useless_rows+=1
         else:
             if (nof_missing_values_aux>0):
@@ -272,14 +292,29 @@ def remove_useless_data(dataset_rows, attr_columns_to_check):
 
     return dataset_rows
 
+def filter_populated_rows(threshold, dataset_rows):
+    filtered_dataset_rows = []
+
+    for row_aux in dataset_rows:
+        non_missing_values = 0
+        for column_aux in row_aux:
+            if (column_aux!='-1'):
+                non_missing_values+=1
+        if (non_missing_values/len(row_aux)>threshold):
+            filtered_dataset_rows.append(row_aux)
+
+    return filtered_dataset_rows
+
 class Build_Dataset_Hospitalized_And_Urgencies():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file):
+    def build_dataset(self, input_filename, headers_file,
+                                             padding_for_missing_values=-1):
         headers, file_data = read_csv_file(input_filename)
-        list_with_fields_converted = np.array(convert_fields(file_data))
+        list_with_fields_converted = \
+            np.array(convert_fields(file_data, padding_for_missing_values))
 
         indexes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                       23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 7]
@@ -319,18 +354,21 @@ class Build_Dataset_Hospitalized_And_Urgencies():
         # therefore they must be specified again.
         new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+        dataset_rows = remove_useless_data(dataset_rows, \
+                              new_indexes_to_check, padding_for_missing_values)
 
         return headers_to_store, dataset_rows
 
 class Build_Dataset_Only_Hospitalized():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file):
+    def build_dataset(self, input_filename, headers_file,
+                                             padding_for_missing_values=-1):
         headers, file_data = read_csv_file(input_filename)
-        list_with_fields_converted = np.array(convert_fields(file_data))
+        list_with_fields_converted = \
+            np.array(convert_fields(file_data, padding_for_missing_values))
 
         indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                       23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
@@ -358,18 +396,21 @@ class Build_Dataset_Only_Hospitalized():
         # therefore they must be specified again.
         new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+        dataset_rows = remove_useless_data(dataset_rows, \
+                              new_indexes_to_check, padding_for_missing_values)
 
         return headers_to_store, dataset_rows
 
 class Build_Dataset_Only_Urgencies():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file):
+    def build_dataset(self, input_filename, headers_file,
+                                             padding_for_missing_values=-1):
         headers, file_data = read_csv_file(input_filename)
-        list_with_fields_converted = np.array(convert_fields(file_data))
+        list_with_fields_converted = \
+            np.array(convert_fields(file_data, padding_for_missing_values))
 
         indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                       23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
@@ -397,13 +438,14 @@ class Build_Dataset_Only_Urgencies():
         # therefore they must be specified again.
         new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-        dataset_rows = remove_useless_data(dataset_rows, new_indexes_to_check)
+        dataset_rows = remove_useless_data(dataset_rows, \
+                              new_indexes_to_check, padding_for_missing_values)
 
         return headers_to_store, dataset_rows
 
 class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
     # This function obtains the urgency time for each patient.
@@ -446,9 +488,11 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
 
         return file_data_with_urgency_time
 
-    def build_dataset(self, input_filename, headers_file):
+    def build_dataset(self, input_filename, headers_file,
+                                             padding_for_missing_values=-1):
         headers, file_data = read_csv_file(input_filename)
-        list_with_fields_converted = np.array(convert_fields(file_data))
+        list_with_fields_converted = \
+            np.array(convert_fields(file_data, padding_for_missing_values))
 
         attrs_indexes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                       23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
@@ -476,6 +520,12 @@ def main():
     parser.add_argument('--approach', type=str, required=True, \
         choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
                  'Hospitalized_And_Urgencies'], help='This specifies the selected approach')
+    parser.add_argument('--padding_missing_values', type=int, \
+                 help='It specifies the value that will be used to fill the cells with missing values.' +
+                 'If not specified, then this value will be -1.')
+    parser.add_argument('--populated_threshold', type=float, required=True, \
+                 help='This specifies the minimum proportion of non missing values that each row must have' + \
+                      'Set to 0.0 if you do not want to filter the rows.')
     parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
     args = parser.parse_args()
@@ -486,9 +536,20 @@ def main():
     selected_approach = universal_factory.create_object(globals(), \
                                       'Build_Dataset_' + args.approach, kwargs)
 
+    # If args.padding_missing_values is None, then the used padding value will
+    # be -1.
+    if (args.padding_missing_values==None):
+        padding_for_missing_values = -1
+    else:
+        padding_for_missing_values = args.padding_missing_values
+
+    print('++++ The cells with missing values will be filled with %d'%padding_for_missing_values)
+
     input_filename = args.input_filename
     headers_to_store, dataset_rows = \
-                selected_approach.build_dataset(input_filename, args.headers_file)
+        selected_approach.build_dataset(input_filename, args.headers_file, \
+                                                   padding_for_missing_values)
+    dataset_rows = filter_populated_rows(args.populated_threshold, dataset_rows)
     write_csv_file(args.output_path, headers_to_store, dataset_rows)
 
 main()
