@@ -28,7 +28,9 @@ class Super_Classifier_Class():
     # "probabilities" that refers to the output of the model but, in this case,
     # to the probabilities that it returns and "target" which is the actual
     # output that the classifier needs to learn.
-    def classification_metrics(self, predicted, probabilities, target):
+    def model_metrics(self, model_outputs, target):
+        predicted, probabilities = model_outputs
+
         metrics_values = {}
 
         cm = confusion_matrix(y_true=target, y_pred=predicted)
@@ -51,16 +53,6 @@ class Super_Classifier_Class():
 
         return metrics_values
 
-    def print_classification_performance(self, metrics_values):
-        print('##### Classification performance report #####')
-        print('Accuracy = %.4f'%metrics_values['accuracy'])
-        print('F1 Score = %.4f'%metrics_values['f1_score'])
-        print('Precision = %.4f'%metrics_values['precision'])
-        print('Specificity = %.4f'%metrics_values['specificity'])
-        print('Recall = %.4f'%metrics_values['recall'])
-        print('AUC-ROC = %.4f'%metrics_values['auc_roc'])
-        print('Confusion matrix = ', metrics_values['confusion_matrix'])
-
     # This function adds the headers to the logs csv file.
     def add_headers_to_csv_file(self, output_filename, \
                                                 headers_list, append=True):
@@ -77,7 +69,7 @@ class Super_Classifier_Class():
 
     # This function stores the current repetition followed by 1 row of
     # metrics_values, a variable that must be a list.
-    def store_classification_metrics(self, repetition, \
+    def store_model_metrics(self, repetition, \
                             metrics_values_list, output_filename, append=True):
         if (append):
             file_mode = 'a'

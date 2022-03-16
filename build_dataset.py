@@ -104,7 +104,8 @@ def convert_fields(file_data):
                     row_list_aux.append(convert_integer_attributes(field))
                 # fecha_seguimiento
                 if (column_number_aux==1):
-                    row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    # row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    row_list_aux.append(field)
                 # hallazgos
                 if (column_number_aux==2):
                     row_list_aux.append(field)
@@ -113,13 +114,15 @@ def convert_fields(file_data):
                     row_list_aux.append(int(field))
                 # fecha_positivo
                 if (column_number_aux==4):
-                    row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    # row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    row_list_aux.append(field)
                 # exitus
                 if (column_number_aux==5):
                     row_list_aux.append(convert_si_no_to_int(field))
                 # fecha_exitus
                 if (column_number_aux==6):
-                    row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    # row_list_aux.append(datetime.strptime(field, '%d/%m/%Y'))
+                    row_list_aux.append(field)
                 # cohorte
                 if (column_number_aux==7):
                     row_list_aux.append(convert_cohorte(field))
@@ -359,6 +362,70 @@ class Build_Dataset_Only_Hospitalized():
 
         return headers_to_store, dataset_rows
 
+class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
+
+    def __init__(self):
+        pass
+
+    # This function obtains the urgency time for each patient.
+    def __compute_urgency_time(self, file_data, attrs_indexes):
+        # This list considers all except the first 5 fields to obtain only the
+        # unique rows.
+        file_data_reduced = file_data[:, attrs_indexes]
+        unique_rows = np.unique(file_data_reduced, axis=0)
+
+        # This list will store the rows grouped by the same patient (that is assumed by
+        # the fact that all their clinical information cells have the same values).
+        grouped_rows_data = []
+        it = 0
+        for row_aux in file_data_reduced:
+            current_index = unique_rows.tolist().index(row_aux.tolist())
+
+            grouped_rows_data.append([str(current_index)] + file_data[it, :].tolist())
+            it+=1
+
+        grouped_rows_data.sort()
+        grouped_rows_data = np.array(grouped_rows_data)
+
+        file_data_with_urgency_time = []
+
+        # As we will add an attribute to the grouped_rows_data, we need to
+        # shift one place all the indexes.
+        shift_attr_indexes = lambda input: input+1
+        grouped_rows_shifted_indexes = list(map(shift_attr_indexes, attrs_indexes))
+        for it in range(0, len(unique_rows)):
+            current_index = grouped_rows_data[:, 0].tolist().index(str(it))
+            primera_fecha_seguimiento_str = grouped_rows_data[current_index, 2]
+            fecha_exitus_str = grouped_rows_data[current_index, 7]
+
+            if (len(fecha_exitus_str)==0):
+                file_data_with_urgency_time.append(grouped_rows_data[current_index, grouped_rows_shifted_indexes].tolist() + ['-1'])
+            else:
+                primera_fecha_seguimiento = datetime.strptime(primera_fecha_seguimiento_str, '%d/%m/%Y')
+                fecha_exitus = datetime.strptime(fecha_exitus_str, '%d/%m/%Y')
+                file_data_with_urgency_time.append(grouped_rows_data[current_index, grouped_rows_shifted_indexes].tolist() + [str((fecha_exitus-primera_fecha_seguimiento).days)])
+
+        return file_data_with_urgency_time
+
+    def build_dataset(self, input_filename, headers_file):
+        headers, file_data = read_csv_file(input_filename)
+        list_with_fields_converted = np.array(convert_fields(file_data))
+
+        attrs_indexes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                      23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+
+        hosp_patients_indexes = np.where(np.array(file_data)[:, 7]=='Hospitalizados')
+        filtered_list_with_fields_converted = \
+            list_with_fields_converted[hosp_patients_indexes[0].tolist(), :]
+
+        file_data_with_urgency_time = self.__compute_urgency_time \
+            (np.array(list_with_fields_converted)[hosp_patients_indexes[0], :], attrs_indexes)
+
+        headers_to_store = np.array(headers)[attrs_indexes].tolist() + ['output']
+        dataset_rows = file_data_with_urgency_time
+
+        return headers_to_store, dataset_rows
+
 def main():
     description = 'Program to build a dataset suitable for classifiers from the \
                        CHUAC COVID-19 machine learning dataset.'
@@ -368,7 +435,8 @@ def main():
     parser.add_argument('--headers_file', type=str, required=True, \
                             help='Path of the file where the headers are specified')
     parser.add_argument('--approach', type=str, required=True, \
-                            choices=['Only_Hospitalized', 'Hospitalized_And_Urgencies'], \
+        choices=['Only_Hospitalized', 'Only_Hospitalized_With_Urgency_Time', \
+                                     'Hospitalized_And_Urgencies'], \
                             help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')

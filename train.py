@@ -1,6 +1,6 @@
 import argparse
 from classifiers.utils_classifiers import *
-import csv
+from regressors.utils_regressors import *
 from datasets.utils_datasets import *
 from datasets.utils_features import *
 from datasets.utils_balancing import *
@@ -20,8 +20,9 @@ class UniversalFactory():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
-    parser.add_argument("--classifier", help="Choose the classifier (SVM, kNN or whatever)", \
-                                              choices=['SVM', 'kNN', 'DT'], required=True)
+    parser.add_argument("--model", help="Choose the model (SVM, kNN or whatever, that can be a classifier or a regressor)", \
+                            choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', \
+                                     'SVM_Regressor'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling'])
@@ -38,7 +39,7 @@ def main():
                            help="This argument indicates that we want to plot the data if possible (in case it is 2D or 3D)")
     args = parser.parse_args()
 
-    if ((args.classifier=='kNN') and (args.n_neighbors is None)):
+    if ((args.model=='kNN') and (args.n_neighbors is None)):
         print('++++ ERROR: if you choose the kNN algorithm, you need to specify the --n_neighbors argument')
         exit(-1)
     if ((args.feature_retrieval=='PCA') and (args.nofcomponents is None)):
@@ -47,8 +48,10 @@ def main():
     if ((args.feature_retrieval=='RBFSampler') and (args.nofcomponents is None)):
         print('++++ ERROR: if you choose RBFSampler algorithm, you need to specify the --nofcomponents argument')
         exit(-1)
+    if ((args.model.find('Regressor')!=-1) and (args.balancing!='No')):
+        print('++++ ERROR: if you choose a regression model, you cannot use any kind of balancing')
+        exit(-1)
 
-    log_csv_file = args.logs_file_path
     universal_factory = UniversalFactory()
 
     # Creating the splitting object with the universal factory.
@@ -65,10 +68,10 @@ def main():
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data, plot_data=args.plot_data)
     # If the CSV logs file had previous content, then this function will remove
     # it.
-    clear_csv_file(log_csv_file)
+    clear_csv_file(args.logs_file_path)
     # This function will store the report of the feature selection process if it
     # is available.
-    feature_retrieval.store_report(log_csv_file, attrs_headers)
+    feature_retrieval.store_report(args.logs_file_path, attrs_headers)
 
     for it in range(0, args.nofrepetitions):
         print('**** Starting repetition number %d...'%it)
@@ -84,28 +87,32 @@ def main():
         input_train_subset, output_train_subset = \
                 balancing_module.execute_balancing(input_train_subset, output_train_subset)
 
-        # Creating the classifier with the universal factory.
+        # Creating the model with the universal factory.
         kwargs = {'n_neighbors': args.n_neighbors}
-        classifier = universal_factory.create_object(globals(), args.classifier + '_Classifier', kwargs)
+        model = universal_factory.create_object(globals(), args.model, kwargs)
 
-        classifier.train(input_train_subset, output_train_subset)
-        # The function returns the predicted values (i.e., labels such as
-        # 1 for positive class and 0 for negative class) and the probabilities
-        # output (for example, 0.97).
-        classifier_output_pred, classifier_output_prob = classifier.test(input_test_subset)
-        metrics_values = classifier.classification_metrics(classifier_output_pred, classifier_output_prob, output_test_subset)
+        # Convert all the cells of the subsets to double.
+        input_train_subset = input_train_subset.astype(np.float64)
+        input_test_subset = input_test_subset.astype(np.float64)
+        output_train_subset = output_train_subset.astype(np.float64)
+        output_test_subset = output_test_subset.astype(np.float64)
+
+        model.train(input_train_subset, output_train_subset)
+        # The function returns the predicted values.
+        model_output_pred = model.test(input_test_subset)
+        metrics_values = model.model_metrics(model_output_pred, output_test_subset)
         headers_list, metrics_values_list = convert_metrics_dict_to_list(metrics_values)
         if (it==0):
-            classifier.add_headers_to_csv_file(log_csv_file, headers_list)
-        # This function will store the number of the current repetition (the value of it)
+            model.add_headers_to_csv_file(args.logs_file_path, headers_list)
+        # This function will store the number of the current repetition (the value of "it")
         # and the metrics of the current repetition.
-        classifier.store_classification_metrics(it, metrics_values_list, log_csv_file)
+        model.store_model_metrics(it, metrics_values_list, args.logs_file_path)
         # Here we obtain the explainability of the model if it is available.
-        classifier.explainability()
-        print('---- NOTE: the logs of this repetition are now stored at %s\n'%log_csv_file)
+        model.explainability()
+        print('---- NOTE: the logs of this repetition are now stored at %s\n'%args.logs_file_path)
 
     # Lastly, the mean and the standard deviation of the metrics obtained for
     # all the repetitions are stored at the end of the CSV file.
-    classifier.compute_mean_and_std_performance(log_csv_file)
+    model.compute_mean_and_std_performance(args.logs_file_path)
 
 main()

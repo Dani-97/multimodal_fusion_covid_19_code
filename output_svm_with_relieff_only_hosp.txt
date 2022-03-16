@@ -1,0 +1,485 @@
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 1
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 990 samples; Class 1 -> 990 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 996 samples; Class 1 -> 996 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 991 samples; Class 1 -> 991 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 1003 samples; Class 1 -> 1003 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_1_feature_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 976 samples; Class 1 -> 976 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_1_feature_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 2
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 989 samples; Class 1 -> 989 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_2_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_2_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 992 samples; Class 1 -> 992 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_2_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 991 samples; Class 1 -> 991 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_2_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 980 samples; Class 1 -> 980 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_2_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 3
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 997 samples; Class 1 -> 997 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_3_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 981 samples; Class 1 -> 981 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_3_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 991 samples; Class 1 -> 991 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_3_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 990 samples; Class 1 -> 990 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_3_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 986 samples; Class 1 -> 986 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_3_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 5
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 994 samples; Class 1 -> 994 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_5_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 996 samples; Class 1 -> 996 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_5_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 988 samples; Class 1 -> 988 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_5_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 990 samples; Class 1 -> 990 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_5_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_5_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 10
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 991 samples; Class 1 -> 991 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_10_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 985 samples; Class 1 -> 985 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_10_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 999 samples; Class 1 -> 999 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_10_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 984 samples; Class 1 -> 984 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_10_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_10_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 15
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 990 samples; Class 1 -> 990 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_15_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 996 samples; Class 1 -> 996 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_15_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 983 samples; Class 1 -> 983 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_15_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_15_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_15_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 20
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 981 samples; Class 1 -> 981 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_20_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 991 samples; Class 1 -> 991 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_20_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 990 samples; Class 1 -> 990 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_20_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 986 samples; Class 1 -> 986 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_20_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 986 samples; Class 1 -> 986 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_20_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ The ReliefF algorithm has been chosen for feature selection
+---- Number of top features: 25
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 970 samples; Class 1 -> 970 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_25_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 992 samples; Class 1 -> 992 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_25_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 976 samples; Class 1 -> 976 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_25_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 999 samples; Class 1 -> 999 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_25_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 992 samples; Class 1 -> 992 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_25_features_ReliefF_oversampling_results.csv
+
+++++ The dataset will be splitted in a Holdout fashion
+---- Test size is 0.20. Therefore, train size is 0.80
+++++ No feature selection or extraction will be performed
+**** Starting repetition number 0...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 987 samples; Class 1 -> 987 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_all_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 1...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 1003 samples; Class 1 -> 1003 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_all_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 2...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 976 samples; Class 1 -> 976 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_all_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 3...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 989 samples; Class 1 -> 989 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_all_features_ReliefF_oversampling_results.csv
+
+**** Starting repetition number 4...
+**** The training subset is being oversampled...
+
+**** INFO: With the oversampling:
+Class 0 -> 986 samples; Class 1 -> 986 samples
+
+++++ Creating an SVM classifier
+++++ WARNING: this model does not have explainability options
+---- NOTE: the logs of this repetition are now stored at ../results/only_hospitalized/svm_all_features_ReliefF_oversampling_results.csv
+
