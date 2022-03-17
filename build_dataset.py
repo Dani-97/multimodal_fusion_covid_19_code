@@ -401,6 +401,29 @@ class Build_Dataset_Only_Hospitalized():
 
         return headers_to_store, dataset_rows
 
+class Build_Dataset_Only_Hospitalized_Only_Clinical_Data(Build_Dataset_Only_Hospitalized):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def build_dataset(self, input_filename, headers_file, \
+                                             padding_for_missing_values=-1):
+        headers_to_store, dataset_rows = \
+            super().build_dataset(input_filename, headers_file, padding_for_missing_values)
+        headers_to_store = np.array(headers_to_store)[[0, 1, 2, 19, 20, 22, 25, 28]].tolist()
+        dataset_rows = np.array(dataset_rows)[:, [0, 1, 2, 19, 20, 22, 25, 28]].tolist()
+
+        filtered_dataset_rows = []
+        for row_aux in dataset_rows:
+            missing_values = 0
+            for column_aux in row_aux:
+                if (str(float(column_aux))=='-1.0'):
+                    missing_values+=1
+            if (missing_values==0):
+                filtered_dataset_rows.append(row_aux)
+
+        return headers_to_store, filtered_dataset_rows
+
 class Build_Dataset_Only_Urgencies():
 
     def __init__(self, **kwargs):
@@ -519,7 +542,8 @@ def main():
                             help='Path of the file where the headers are specified')
     parser.add_argument('--approach', type=str, required=True, \
         choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
-                 'Hospitalized_And_Urgencies'], help='This specifies the selected approach')
+                 'Hospitalized_And_Urgencies', 'Only_Hospitalized_Only_Clinical_Data'], \
+                 help='This specifies the selected approach')
     parser.add_argument('--padding_missing_values', type=int, \
                  help='It specifies the value that will be used to fill the cells with missing values.' +
                  'If not specified, then this value will be -1.')

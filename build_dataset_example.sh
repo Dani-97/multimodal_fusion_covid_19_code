@@ -1,1 +1,1 @@
-python3 build_dataset.py --input_filename ../original_dataset/input.csv --headers_file ../original_dataset/headers.txt --output_path ../built_dataset/only_hospitalized_zero_padding.csv --approach Only_Hospitalized --populated_threshold 0 --padding_missing_values 0
+python3 build_dataset.py --input_filename ../original_dataset/input.csv --headers_file ../original_dataset/headers.txt --output_path ../built_dataset/only_hospitalized_only_clinical_data.csv --approach Only_Hospitalized_Only_Clinical_Data --populated_threshold 0 --padding_missing_values 0
