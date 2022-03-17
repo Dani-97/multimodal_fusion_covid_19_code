@@ -63,35 +63,3 @@ class Holdout_Split(Super_Splitting_Class):
         splitting_subsets = train_test_split(input_data, output_data, test_size=self.test_size)
 
         return splitting_subsets
-
-class Holdout_Split_Pytorch(Super_Splitting_Class):
-
-    def __init__(self, **kwargs):
-        self.test_size = float(kwargs['test_size'])
-        print('++++ The dataset will be splitted in a Holdout fashion')
-        print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
-
-    def load_dataset(self, dataset_path):
-        print('++++ Loading the images of the path %s'%dataset_path)
-        transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), \
-                                                    torchvision.transforms.Resize([768, 768])])
-
-        input_dataset = \
-            torchvision.datasets.ImageFolder(dataset_path, transform=transform)
-
-        return input_dataset
-
-    def split(self, input_dataset):
-        # This variable specifies the number of samples of the input dataset.
-        len_of_dataset = len(input_dataset)
-
-        nof_test_samples = int(self.test_size*len_of_dataset)
-        nof_training_samples = len_of_dataset - nof_test_samples
-        train_dataset, test_dataset = \
-                       torch.utils.data.random_split(input_dataset, \
-                                   [nof_training_samples, nof_test_samples])
-
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=True)
-        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=True)
-
-        return train_loader, test_loader

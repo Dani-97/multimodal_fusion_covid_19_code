@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 import torch
-from torchvision import models
+import torchvision
 
 class UniversalFactory():
 
@@ -44,10 +44,26 @@ class Move_To_CUDA(Move_To_CPU):
 
         return output_data
 
-class AlexNet_Deep_Features_Model():
+class Super_Model_Class():
+
+    def __init__(self):
+        pass
+
+    def load_dataset(self, dataset_path, images_width=768, images_height=768):
+        print('++++ Loading the images of the path %s'%dataset_path)
+        transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), \
+            torchvision.transforms.Resize([images_height, images_width])])
+
+        input_dataset = \
+            torchvision.datasets.ImageFolder(dataset_path, transform=transform)
+        input_dataset_loader = torch.utils.data.DataLoader(input_dataset, batch_size=1, shuffle=True)
+
+        return input_dataset_loader
+
+class AlexNet_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = models.alexnet()
+        self.deep_features_model = torchvision.models.alexnet()
         self.device = kwargs['device']
 
     def extract_deep_features(self, input_data):
@@ -80,10 +96,12 @@ class AlexNet_Deep_Features_Model():
             print('FC1 4096 -> ', np.shape(outputs_fc_1_4096))
             print('FC2 4096 -> ', np.shape(outputs_fc_2_4096))
 
-class VGG_16_Deep_Features_Model():
+    # The rest of the methods are implemented in the parent class.
+
+class VGG_16_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = models.vgg16(pretrained=True)
+        self.deep_features_model = torchvision.models.vgg16(pretrained=True)
         self.device = kwargs['device']
 
     def extract_deep_features(self, input_data):
@@ -116,3 +134,5 @@ class VGG_16_Deep_Features_Model():
             print('FC 1000 -> ', np.shape(outputs_fc_1000))
             print('FC1 4096 -> ', np.shape(outputs_fc_1_4096))
             print('FC2 4096 -> ', np.shape(outputs_fc_2_4096))
+
+        # The rest of the methods are implemented in the parent class.
