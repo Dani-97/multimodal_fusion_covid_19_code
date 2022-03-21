@@ -5,6 +5,7 @@ import pickle
 from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
+from xgboost import XGBClassifier
 
 # This is the parent of every classifier models that are going to be
 # implemented for the purposes of this work.
@@ -179,5 +180,13 @@ class DT_Classifier(Super_Classifier_Class):
         rules = tree.export_text(self.classifier)
         print('##### Rules of the decision tree #####\n')
         print(rules)
+
+    # The rest of the functions are inherited from the super class.
+
+class XGBoost_Classifier(Super_Classifier_Class):
+
+    def __init__(self, **kwargs):
+        print('++++ Creating an XGBoost instance')
+        self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1)
 
     # The rest of the functions are inherited from the super class.

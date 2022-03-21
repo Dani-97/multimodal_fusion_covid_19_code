@@ -1,5 +1,5 @@
 import argparse
-from analysis.utils_analysis import *
+from analysis.utils_histograms import *
 import configparser
 import numpy as np
 from utils import read_csv_file, read_headers_file, get_duplicates
