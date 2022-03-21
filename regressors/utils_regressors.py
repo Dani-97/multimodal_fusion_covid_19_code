@@ -1,7 +1,9 @@
 import csv
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import linear_model
 from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
 
 # This is the parent of every regression models that are going to be
 # implemented for the purposes of this work.
@@ -16,6 +18,7 @@ class Super_Regressor_Class():
     def test(self, input_data):
         self.regressor.predict(input_data)
         regressor_output = self.regressor.predict(input_data)
+        print('DEBUGGING: test -> regressor_output -> ', regressor_output)
 
         return regressor_output
 
@@ -76,9 +79,15 @@ class SVM_Regressor(Super_Regressor_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an SVM regression')
-        self.regressor = SVR(C=1.0, epsilon=0.2)
+        self.regressor = SVR(kernel='linear')
 
     # The rest of the methods are inherited from the parent class.
+
+class DT_Regressor(Super_Regressor_Class):
+
+    def __init__(self, **kwargs):
+        print('++++ Creating a DT regression')
+        self.regressor = DecisionTreeRegressor()
 
 class Linear_Regressor(Super_Regressor_Class):
 

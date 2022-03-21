@@ -401,6 +401,53 @@ class Build_Dataset_Only_Hospitalized():
 
         return headers_to_store, dataset_rows
 
+class Build_Dataset_Only_Hospitalized_Joint_Inmunosupression(Build_Dataset_Only_Hospitalized):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def __check_inmunosupression__(self, dataset_rows, inmunosupression_attrs_indexes):
+        tmp_array = np.array(dataset_rows)[:, inmunosupression_attrs_indexes].astype(int)
+        inmunosupressed_list = []
+
+        for row_aux in tmp_array:
+            inmunosupressed_aux = 0
+            for column_aux in row_aux:
+                if (column_aux==1):
+                    inmunosupressed_aux = 1
+                    break
+            inmunosupressed_list.append(inmunosupressed_aux)
+
+        return inmunosupressed_list
+
+    def build_dataset(self, input_filename, headers_file, \
+                                             padding_for_missing_values=-1):
+        headers_to_store, dataset_rows = \
+            super().build_dataset(input_filename, headers_file, padding_for_missing_values)
+
+        inmunosupression_attrs_indexes = list(range(11, 19))
+        inmunosupressed_list = \
+            np.array(self.__check_inmunosupression__(dataset_rows, \
+                                              inmunosupression_attrs_indexes))
+        output_attr_index = np.shape(dataset_rows)[1]-1
+        # This variable will store the column with the inmunosupression
+        # conditions merged and will remove the splitted inmunosupression
+        # independent conditions columns.
+        pieces_to_join = (dataset_rows[:, :11], dataset_rows[:, 19:output_attr_index], \
+            np.expand_dims(inmunosupressed_list, axis=1), \
+                    np.expand_dims(dataset_rows[:, output_attr_index], axis=1))
+        rows_joint_inmunosupression = \
+            np.concatenate(pieces_to_join, axis=1)
+
+        # The same as in the previous case but, in this occasion, for the
+        # headers.
+        headers_pieces_to_join = (headers_to_store[:11], headers_to_store[19:output_attr_index], \
+            ['inmunosupression'], [headers_to_store[output_attr_index]])
+
+        headers_joint_inmunosupression = np.concatenate(headers_pieces_to_join)
+
+        return headers_joint_inmunosupression.tolist(), rows_joint_inmunosupression
+
 class Build_Dataset_Only_Hospitalized_Only_Clinical_Data(Build_Dataset_Only_Hospitalized):
 
     def __init__(self, **kwargs):
@@ -488,7 +535,6 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
             grouped_rows_data.append([str(current_index)] + file_data[it, :].tolist())
             it+=1
 
-        grouped_rows_data.sort()
         grouped_rows_data = np.array(grouped_rows_data)
 
         file_data_with_urgency_time = []
@@ -497,17 +543,18 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time():
         # shift one place all the indexes.
         shift_attr_indexes = lambda input: input+1
         grouped_rows_shifted_indexes = list(map(shift_attr_indexes, attrs_indexes))
+        print('++++ To build this dataset, all the rows without exitus will be removed.')
         for it in range(0, len(unique_rows)):
             current_index = grouped_rows_data[:, 0].tolist().index(str(it))
             primera_fecha_seguimiento_str = grouped_rows_data[current_index, 2]
             fecha_exitus_str = grouped_rows_data[current_index, 7]
 
-            if (len(fecha_exitus_str)==0):
-                file_data_with_urgency_time.append(grouped_rows_data[current_index, grouped_rows_shifted_indexes].tolist() + ['-1'])
-            else:
+            if (len(fecha_exitus_str)!=0):
                 primera_fecha_seguimiento = datetime.strptime(primera_fecha_seguimiento_str, '%d/%m/%Y')
                 fecha_exitus = datetime.strptime(fecha_exitus_str, '%d/%m/%Y')
                 file_data_with_urgency_time.append(grouped_rows_data[current_index, grouped_rows_shifted_indexes].tolist() + [str((fecha_exitus-primera_fecha_seguimiento).days)])
+                # file_data_with_urgency_time.append(grouped_rows_data[current_index, grouped_rows_shifted_indexes].tolist() + \
+                #                 [fecha_exitus, primera_fecha_seguimiento, (fecha_exitus-primera_fecha_seguimiento).days])
 
         return file_data_with_urgency_time
 
@@ -542,7 +589,8 @@ def main():
                             help='Path of the file where the headers are specified')
     parser.add_argument('--approach', type=str, required=True, \
         choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
-                 'Hospitalized_And_Urgencies', 'Only_Hospitalized_Only_Clinical_Data'], \
+                 'Hospitalized_And_Urgencies', 'Only_Hospitalized_Only_Clinical_Data', \
+                 'Only_Hospitalized_Joint_Inmunosupression'], \
                  help='This specifies the selected approach')
     parser.add_argument('--padding_missing_values', type=int, \
                  help='It specifies the value that will be used to fill the cells with missing values.' +
