@@ -1,7 +1,10 @@
 import copy
 import numpy as np
+import os
+from PIL import Image
 import torch
 import torchvision
+import torchvision.transforms.functional as TF
 
 class UniversalFactory():
 
@@ -27,8 +30,9 @@ class Move_To_CPU():
     def __init__(self):
         pass
 
-    def execute_move_to_device(self, input_data):
-        print('++++ A variable is being kept in CPU')
+    def execute_move_to_device(self, input_data, logging=False):
+        if (logging):
+            print('++++ A variable is being kept in CPU')
 
         return input_data
 
@@ -38,8 +42,10 @@ class Move_To_CUDA(Move_To_CPU):
     def __init__(self):
         pass
 
-    def execute_move_to_device(self, input_data):
-        print('++++ A variable is being transferred to a CUDA device')
+    def execute_move_to_device(self, input_data, logging=False):
+        if (logging):
+            print('++++ A variable is being transferred to a CUDA device')
+
         output_data = input_data.cuda()
 
         return output_data
@@ -49,16 +55,15 @@ class Super_Model_Class():
     def __init__(self):
         pass
 
-    def load_dataset(self, dataset_path, images_width=768, images_height=768):
-        print('++++ Loading the images of the path %s'%dataset_path)
-        transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), \
-            torchvision.transforms.Resize([images_height, images_width])])
+    def read_image(self, image_path, image_width=768, image_height=768):
+        dimensions = [image_height, image_width]
 
-        input_dataset = \
-            torchvision.datasets.ImageFolder(dataset_path, transform=transform)
-        input_dataset_loader = torch.utils.data.DataLoader(input_dataset, batch_size=1, shuffle=True)
+        input_image = Image.open(image_path)
+        input_image_tf = TF.to_tensor(input_image)
+        input_image_tf = torchvision.transforms.functional.resize(input_image_tf, dimensions)
+        input_image_tf = input_image_tf.unsqueeze_(0)
 
-        return input_dataset_loader
+        return input_image_tf
 
 class AlexNet_Deep_Features_Model(Super_Model_Class):
 
@@ -73,28 +78,31 @@ class AlexNet_Deep_Features_Model(Super_Model_Class):
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
-        # This variable will contain the features of the target layers.
-        deep_features_list = []
-        for batch_features, _ in input_data:
-            batch_features = move_to_device_module.execute_move_to_device(batch_features)
-            # This variable will contain the modified version of the network
-            # architecture that allows to retrieve the features from a certain
-            # layer.
-            modified_deep_features_model = copy.deepcopy(self.deep_features_model)
-            outputs_fc_1000 = modified_deep_features_model(batch_features)
 
-            modified_deep_features_model.classifier[5] = Identity()
-            modified_deep_features_model.classifier[6] = Identity()
-            outputs_fc_2_4096 = modified_deep_features_model(batch_features)
+        input_data = move_to_device_module.execute_move_to_device(input_data)
+        # This variable will contain the modified version of the network
+        # architecture that allows to retrieve the features from a certain
+        # layer.
+        modified_deep_features_model = copy.deepcopy(self.deep_features_model)
+        output_features = []
+        output_features.append(modified_deep_features_model(input_data))
 
-            modified_deep_features_model.classifier[2] = Identity()
-            modified_deep_features_model.classifier[3] = Identity()
-            modified_deep_features_model.classifier[4] = Identity()
-            outputs_fc_1_4096 = modified_deep_features_model(batch_features)
+        modified_deep_features_model.classifier[5] = Identity()
+        modified_deep_features_model.classifier[6] = Identity()
+        output_features.append(modified_deep_features_model(input_data))
 
-            print('FC 1000 -> ', np.shape(outputs_fc_1000))
-            print('FC1 4096 -> ', np.shape(outputs_fc_1_4096))
-            print('FC2 4096 -> ', np.shape(outputs_fc_2_4096))
+        modified_deep_features_model.classifier[2] = Identity()
+        modified_deep_features_model.classifier[3] = Identity()
+        modified_deep_features_model.classifier[4] = Identity()
+        output_features.append(modified_deep_features_model(input_data))
+
+        it = 0
+        features_merged_together = []
+        for features_set_aux in output_features:
+            features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
+            it+=1
+
+        return features_merged_together
 
     # The rest of the methods are implemented in the parent class.
 
@@ -111,28 +119,31 @@ class VGG_16_Deep_Features_Model(Super_Model_Class):
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
-        # This variable will contain the features of the target layers.
-        deep_features_list = []
-        for batch_features, _ in input_data:
-            batch_features = move_to_device_module.execute_move_to_device(batch_features)
-            # This variable will contain the modified version of the network
-            # architecture that allows to retrieve the features from a certain
-            # layer.
-            modified_deep_features_model = copy.deepcopy(self.deep_features_model)
-            outputs_fc_1000 = modified_deep_features_model(batch_features)
 
-            modified_deep_features_model.classifier[4] = Identity()
-            modified_deep_features_model.classifier[5] = Identity()
-            modified_deep_features_model.classifier[6] = Identity()
-            outputs_fc_2_4096 = modified_deep_features_model(batch_features)
+        input_data = move_to_device_module.execute_move_to_device(input_data)
+        # This variable will contain the modified version of the network
+        # architecture that allows to retrieve the features from a certain
+        # layer.
+        modified_deep_features_model = copy.deepcopy(self.deep_features_model)
+        output_features = []
+        output_features.append(modified_deep_features_model(input_data))
 
-            modified_deep_features_model.classifier[1] = Identity()
-            modified_deep_features_model.classifier[2] = Identity()
-            modified_deep_features_model.classifier[3] = Identity()
-            outputs_fc_1_4096 = modified_deep_features_model(batch_features)
+        modified_deep_features_model.classifier[4] = Identity()
+        modified_deep_features_model.classifier[5] = Identity()
+        modified_deep_features_model.classifier[6] = Identity()
+        output_features.append(modified_deep_features_model(input_data))
 
-            print('FC 1000 -> ', np.shape(outputs_fc_1000))
-            print('FC1 4096 -> ', np.shape(outputs_fc_1_4096))
-            print('FC2 4096 -> ', np.shape(outputs_fc_2_4096))
+        modified_deep_features_model.classifier[1] = Identity()
+        modified_deep_features_model.classifier[2] = Identity()
+        modified_deep_features_model.classifier[3] = Identity()
+        output_features.append(modified_deep_features_model(input_data))
+
+        it = 0
+        features_merged_together = []
+        for features_set_aux in output_features:
+            features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
+            it+=1
+
+        return features_merged_together
 
         # The rest of the methods are implemented in the parent class.
