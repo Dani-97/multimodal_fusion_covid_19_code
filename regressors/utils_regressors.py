@@ -1,5 +1,4 @@
 import csv
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import linear_model
 from sklearn.svm import SVR
@@ -18,7 +17,6 @@ class Super_Regressor_Class():
     def test(self, input_data):
         self.regressor.predict(input_data)
         regressor_output = self.regressor.predict(input_data)
-        print('DEBUGGING: test -> regressor_output -> ', regressor_output)
 
         return regressor_output
 

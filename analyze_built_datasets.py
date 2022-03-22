@@ -16,7 +16,8 @@ def main():
     parser.add_argument('--input_file', type=str, required=True, \
                             help='Path to the input file where we want to make the query')
     parser.add_argument('--built_dataset', type=str, required=True, \
-                            choices=['Only_Hospitalized'], \
+                            choices=['Only_Hospitalized', 'Only_Hospitalized_Joint_Inmunosupression', \
+                            'Hospitalized_And_Urgencies'], \
                             help='Descriptive name of the dataset as is used in this project')
 
     args = parser.parse_args()
