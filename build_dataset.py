@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--approach', type=str, required=True, \
         choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
                  'Hospitalized_And_Urgencies', 'Only_Hospitalized_Only_Clinical_Data', \
-                 'Only_Hospitalized_Joint_Inmunosupression'], \
+                 'Only_Hospitalized_Joint_Inmunosupression', 'Only_Hospitalized_Only_Less_65'], \
                  help='This specifies the selected approach')
     parser.add_argument('--padding_missing_values', type=int, \
                  help='It specifies the value that will be used to fill the cells with missing values.' +

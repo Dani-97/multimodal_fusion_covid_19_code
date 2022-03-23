@@ -440,8 +440,7 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
 
         # Finally, we remove some of the fields that we do not need.
         attr_indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-                           23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, \
-                               5]
+                           23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
         # This function is used to replace the string "exitus" by the string
         # "output".
         replace_field_exitus_by_output = lambda input: input.replace('exitus', 'output')
@@ -453,7 +452,7 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
         with open(output_path, 'w') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
             # First of all, we need to write the headers of the fields.
-            csv_writer.writerow(headers_to_store)
+            csv_writer.writerow(headers_to_store[1:])
 
             total_number_of_images = len(images_names_list)
             spinner_states = ['|', '/', '-', '\\']
@@ -479,12 +478,30 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
                         if (current_clinical_row[7]=='0'):
                             input_image = deep_features_model.read_image(image_path)
                             features_array = deep_features_model.extract_deep_features(input_image)
-                            csv_writer.writerow(current_clinical_row[attr_indexes].tolist() + features_array)
+                            row_to_write = current_clinical_row[attr_indexes[1:]].tolist() + \
+                                               features_array + [current_clinical_row[5]]
+                            csv_writer.writerow(row_to_write)
                 progress = int((it/total_number_of_images)*100)
                 print('%s Progress = %d%s '%(spinner_states[it%4], progress, '%'), end='\r')
                 it+=1
 
             print('++++ The new built dataset has been stored at %s'%output_path)
+
+class Build_Dataset_Only_Hospitalized_Only_Less_65(Build_Dataset_Only_Hospitalized, \
+                                                  Super_Class_Build_Dataset):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def build_dataset(self, input_filename, headers_file,
+                                             padding_for_missing_values=-1):
+        headers_to_store, dataset_rows = \
+            super().build_dataset(input_filename, headers_file, \
+                                                     padding_for_missing_values)
+        headers_to_store = np.array(headers_to_store)[1:]
+        filtered_dataset_rows = np.array(dataset_rows)[np.where(dataset_rows[:, 0]=='0'), 1:]
+
+        return headers_to_store.tolist(), filtered_dataset_rows[0].tolist()
 
 class Build_Dataset_Only_Hospitalized_Joint_Inmunosupression(Build_Dataset_Only_Hospitalized, \
                                                   Super_Class_Build_Dataset):
