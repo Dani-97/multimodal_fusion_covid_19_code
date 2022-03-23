@@ -6,6 +6,37 @@ class Super_Class_Analysis():
     def __init__(self):
         pass
 
+    def __perform_individual_analysis_markdown__(self, attr, input_dataframe, name_class0, name_class1):
+        # Total number of rows of the dataset.
+        nof_rows = len(input_dataframe)
+
+        nof_attr = len(input_dataframe.query('%s==1'%attr))
+        nof_non_attr = len(input_dataframe.query('%s!=1'%attr))
+
+        nof_attr_and_class0 = len(input_dataframe.query('(%s==1) and (output==0)'%attr))
+        nof_attr_and_class1 = len(input_dataframe.query('(%s==1) and (output==1)'%attr))
+
+        nof_non_attr_and_class0 = len(input_dataframe.query('(%s!=1) and (output==0)'%attr))
+        nof_non_attr_and_class1 = len(input_dataframe.query('(%s!=1) and (output==1)'%attr))
+
+        print('| **%s** |                  |                  |'%attr)
+        print('|:-------------------:|:----------------:|:----------------:|')
+        percentage_si_aux = (nof_attr/nof_rows)*100
+        percentage_no_aux = (nof_non_attr/nof_rows)*100
+        print('|                     | **No** (%.2f %s) | **Sí** (%.2f %s) |'%\
+                                        (percentage_no_aux, '%', percentage_si_aux, '%'))
+        percentage_class0_no_attr_aux = (nof_non_attr_and_class0/nof_non_attr)*100
+        percentage_class0_si_attr_aux = (nof_attr_and_class0/nof_attr)*100
+        print('|      **%s**     |      %.2f %s    |      %.2f %s     |'%\
+                (name_class0, percentage_class0_no_attr_aux, '%', \
+                              percentage_class0_si_attr_aux, '%'))
+        percentage_class1_no_attr_aux = (nof_non_attr_and_class1/nof_non_attr)*100
+        percentage_class1_si_attr_aux = (nof_attr_and_class1/nof_attr)*100
+        print('|      **%s**     |      %.2f %s    |      %.2f %s     |'%\
+                (name_class1, percentage_class1_no_attr_aux, '%', \
+                              percentage_class1_si_attr_aux, '%'))
+        print('')
+
     # This function uses the name of the attribute as the input as well as the
     # input dataframe.
     def __perform_individual_analysis__(self, attr, input_dataframe, name_class0, name_class1):
@@ -59,7 +90,7 @@ class Analysis_Only_Hospitalized(Super_Class_Analysis):
         name_class0, name_class1 = 'Non Exitus', 'Exitus'
 
         for attr_aux in attrs_list:
-            super().__perform_individual_analysis__(attr_aux, input_dataframe, name_class0, name_class1)
+            super().__perform_individual_analysis_markdown__(attr_aux, input_dataframe, name_class0, name_class1)
 
 class Analysis_Only_Hospitalized_Joint_Inmunosupression(Super_Class_Analysis):
 
@@ -71,7 +102,7 @@ class Analysis_Only_Hospitalized_Joint_Inmunosupression(Super_Class_Analysis):
         name_class0, name_class1 = 'Non Exitus', 'Exitus'
 
         for attr_aux in attrs_list:
-            super().__perform_individual_analysis__(attr_aux, input_dataframe, name_class0, name_class1)
+            super().__perform_individual_analysis_markdown__(attr_aux, input_dataframe, name_class0, name_class1)
 
 class Analysis_Hospitalized_And_Urgencies(Super_Class_Analysis):
 
@@ -86,4 +117,4 @@ class Analysis_Hospitalized_And_Urgencies(Super_Class_Analysis):
         name_class0, name_class1 = 'Hospitalized', 'Urgencies'
 
         for attr_aux in attrs_list:
-            super().__perform_individual_analysis__(attr_aux, input_dataframe, name_class0, name_class1)
+            super().__perform_individual_analysis_markdown__(attr_aux, input_dataframe, name_class0, name_class1)
