@@ -21,13 +21,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
     parser.add_argument("--model", help="Choose the model (SVM, kNN or whatever, that can be a classifier or a regressor)", \
-                            choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'XGBoost_Classifier', \
+                            choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'MLP_Classifier', 'XGBoost_Classifier', \
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
                                               choices=['No', 'PCA', 'ReliefF'])
+    parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
+                                              action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
                                               choices=['Holdout'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select in the case of using SelectKBest feature selection algorithm", type=int)
@@ -70,8 +72,12 @@ def main():
     # it.
     clear_csv_file(args.logs_file_path)
     # This function will store the report of the feature selection process if it
-    # is available.
-    feature_retrieval.store_report(args.logs_file_path, attrs_headers)
+    # is available and if the user has decided to store it.
+    if (args.store_features_selection_report):
+        feature_retrieval.store_report(args.logs_file_path, attrs_headers)
+    else:
+        print('++++ As the user decided, the report of the features' + \
+            ' selection algorithm will not be stored to the logging results file')
 
     for it in range(0, args.nofrepetitions):
         print('**** Starting repetition number %d...'%it)

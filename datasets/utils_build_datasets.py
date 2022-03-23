@@ -487,6 +487,83 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
 
             print('++++ The new built dataset has been stored at %s'%output_path)
 
+class Build_Dataset_Only_Hospitalized_Only_Deep_Features(Build_Dataset_Only_Hospitalized, \
+                                                  Super_Class_Build_Dataset):
+
+    def __init__(self, **kwargs):
+        pass
+
+    # Just to clear out, in this function, "deepf" denotes "deep features".
+    '''
+    ###########################################################################
+       NOTE: This function stores row by row directly for efficiency reasons.
+    ###########################################################################
+    '''
+    def build_dataset_with_deep_features(self, deepf_model_name, headers_file, \
+                                 input_dataset_dir, input_table_file, \
+                                     associations_file, output_path, **kwargs):
+        _, clinical_data_rows = read_csv_file(input_table_file, has_headers=True)
+        clinical_data_rows = convert_fields(clinical_data_rows)
+        clinical_data_rows = np.array(clinical_data_rows)
+        headers_to_store = read_headers_file(headers_file)
+
+        _, associations_rows = read_csv_file(associations_file, has_headers=False)
+        associations_rows = np.array(associations_rows)
+
+        universal_factory = UniversalFactory()
+
+        kwargs_deepf_model = {'device': kwargs['device']}
+        deep_features_model = universal_factory.create_object(globals(), \
+                        deepf_model_name + '_Deep_Features_Model', kwargs_deepf_model)
+
+        # Finally, we remove some of the fields that we do not need.
+        attr_indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+                           23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+        # This function is used to replace the string "exitus" by the string
+        # "output".
+        replace_field_exitus_by_output = lambda input: input.replace('exitus', 'output')
+        headers_to_store = np.array(headers_to_store)[attr_indexes].tolist()
+        headers_to_store = list(map(replace_field_exitus_by_output, headers_to_store))
+
+        images_names_list = os.listdir(input_dataset_dir)
+
+        with open(output_path, 'w') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            # First of all, we need to write the headers of the fields.
+            csv_writer.writerow(headers_to_store[1:])
+
+            total_number_of_images = len(images_names_list)
+            spinner_states = ['|', '/', '-', '\\']
+            it = 0
+            for image_name_aux in images_names_list:
+                image_path = '%s/%s'%(input_dataset_dir, image_name_aux)
+                # First of all, we need to check if the current image name has a
+                # code associated.
+                current_image_code_idx = np.where(associations_rows[:, 0]==image_name_aux)
+                if (np.any(current_image_code_idx)):
+                    # This variable stores the code that corresponds to the current
+                    # image file name.
+                    current_image_code = associations_rows[current_image_code_idx[0][0], 1]
+                    # This variable specifies the index of the current code at the
+                    # clinical data table.
+                    current_code_idx = np.where(clinical_data_rows[:, 0]==current_image_code)
+                    # We also need to check if the image code has a filename
+                    # associated.
+                    if (np.any(current_code_idx)):
+                        # This is the row of the clinical data table that belongs
+                        # to the current image code.
+                        current_clinical_row = clinical_data_rows[current_code_idx[0][0], :]
+                        if (current_clinical_row[7]=='0'):
+                            input_image = deep_features_model.read_image(image_path)
+                            features_array = deep_features_model.extract_deep_features(input_image)
+                            row_to_write = features_array + [current_clinical_row[5]]
+                            csv_writer.writerow(row_to_write)
+                progress = int((it/total_number_of_images)*100)
+                print('%s Progress = %d%s '%(spinner_states[it%4], progress, '%'), end='\r')
+                it+=1
+
+            print('++++ The new built dataset has been stored at %s'%output_path)
+
 class Build_Dataset_Only_Hospitalized_Only_Less_65(Build_Dataset_Only_Hospitalized, \
                                                   Super_Class_Build_Dataset):
 

@@ -25,7 +25,8 @@ def main():
                                             required=True)
     parser.add_argument("--associations_file", required=True, \
         help="Path to the file with the associations between an image and its code in the input table")
-    parser.add_argument('--approach', type=str, required=True, choices=['Only_Hospitalized'], \
+    parser.add_argument('--approach', type=str, required=True, \
+      choices=['Only_Hospitalized', 'Only_Hospitalized_Only_Deep_Features'], \
                                           help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)

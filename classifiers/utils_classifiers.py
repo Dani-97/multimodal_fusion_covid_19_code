@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from xgboost import XGBClassifier
 
@@ -182,6 +183,12 @@ class DT_Classifier(Super_Classifier_Class):
         print(rules)
 
     # The rest of the functions are inherited from the super class.
+
+class MLP_Classifier(Super_Classifier_Class):
+
+    def __init__(self, **kwargs):
+        print('++++ Creating an MLP classifier')
+        self.classifier = MLPClassifier(random_state=1, max_iter=300)
 
 class XGBoost_Classifier(Super_Classifier_Class):
 
