@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 import sys
 sys.path.append('../')
 import numpy as np
@@ -759,3 +760,35 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time(Super_Class_Build_Datase
         dataset_rows = file_data_with_urgency_time
 
         return headers_to_store, dataset_rows
+
+class Build_Dataset_Only_Hospitalized_With_Discretized_Urgency_Time(Build_Dataset_Only_Hospitalized_With_Urgency_Time, \
+                                                    Super_Class_Build_Dataset):
+
+        def __init__(self, **kwargs):
+            pass
+
+        def __discretize_urgency_time__(self, dataset_rows):
+            nofattributes = np.shape(dataset_rows)[1]
+            dataset_rows = np.array(dataset_rows)
+
+            it = 0
+            for row_aux in dataset_rows:
+                urgency_time = int(row_aux[nofattributes-1])
+                if (urgency_time<=100):
+                    output_value = 0
+                else:
+                    output_value = 1
+                dataset_rows[it, nofattributes-1] = output_value
+                it+=1
+
+            return dataset_rows.tolist()
+
+        def build_dataset(self, input_filename, headers_file,
+                                                 padding_for_missing_values=-1):
+            headers_to_store, dataset_rows = \
+                super().build_dataset(input_filename, headers_file, \
+                    padding_for_missing_values)
+            nofattributes = np.shape(dataset_rows)[1]
+            dataset_rows = self.__discretize_urgency_time__(dataset_rows)
+
+            return headers_to_store, dataset_rows

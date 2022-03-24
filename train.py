@@ -68,6 +68,7 @@ def main():
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data, plot_data=args.plot_data)
+
     # If the CSV logs file had previous content, then this function will remove
     # it.
     clear_csv_file(args.logs_file_path)
