@@ -35,6 +35,8 @@ def main():
                       'Set to 0.0 if you do not want to filter the rows.')
     parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
+    parser.add_argument('--discretize_clinic_data', action='store_true', \
+                            help='If selected, the clinic data are discretized')
     args = parser.parse_args()
 
     universal_factory = UniversalFactory()
@@ -55,7 +57,7 @@ def main():
     input_filename = args.input_filename
     headers_to_store, dataset_rows = \
         selected_approach.build_dataset(input_filename, args.headers_file, \
-                                                   padding_for_missing_values)
+                      padding_for_missing_values, args.discretize_clinic_data)
     dataset_rows = filter_populated_rows(args.populated_threshold, dataset_rows)
     write_csv_file(args.output_path, headers_to_store, dataset_rows)
 

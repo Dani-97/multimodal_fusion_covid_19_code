@@ -18,6 +18,154 @@ class UniversalFactory():
         universal_obj = ClassName(**kwargs)
         return universal_obj
 
+class No_Discretizer():
+
+    def __init__(self):
+        pass
+
+    def discretize_linfocitos(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_dimeros_d(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_ldh(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_creatinina(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_filtrado_glomerular_estimado(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_proteina_c_reactiva(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_ferritina(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+    def discretize_il6(self, input_value, padding_for_missing_values=-1):
+        return input_value
+
+class Discretizer(No_Discretizer):
+
+    def __init__(self):
+        pass
+
+    def discretize_linfocitos(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<0.77) and (input_value_converted>0)):
+                output_value = 0
+            elif ((input_value_converted>=0.77) and (input_value_converted<=4.5)):
+                output_value = 1
+            elif (input_value_converted>4.5):
+                output_value = 2
+        except:
+            pass
+
+        return output_value
+
+    def discretize_dimeros_d(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted>500)):
+                output_value = 0
+            elif ((input_value_converted<=500) and (input_value_converted>0)):
+                output_value = 1
+        except:
+            pass
+
+        return output_value
+
+    def discretize_ldh(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<60) and (input_value_converted>0)):
+                output_value = 0
+            elif ((input_value_converted>=60) and (input_value_converted<=160)):
+                output_value = 1
+            elif (input_value_converted>160):
+                output_value = 2
+        except:
+            pass
+
+        return output_value
+
+    def discretize_creatinina(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<0.7) and (input_value_converted>0)):
+                output_value = 0
+            elif ((input_value_converted>=0.7) and (input_value_converted<=1.3)):
+                output_value = 1
+            elif (input_value_converted>1.3):
+                output_value = 2
+        except:
+            pass
+
+        return output_value
+
+    def discretize_filtrado_glomerular_estimado(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<15) and (input_value_converted>0)):
+                output_value = 0
+            elif (input_value_converted>60):
+                output_value = 1
+            elif ((input_value_converted>=15) and (input_value_converted<=60)):
+                output_value = 2
+        except:
+            pass
+
+        return output_value
+
+    def discretize_proteina_c_reactiva(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if (input_value_converted>0.5):
+                output_value = 0
+            elif ((input_value_converted<=0.5) and (input_value_converted>0)):
+                output_value = 1
+        except:
+            pass
+
+        return output_value
+
+    def discretize_ferritina(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<30) and (input_value_converted>0)):
+                output_value = 0
+            elif ((input_value_converted>=30) and (input_value_converted<=300)):
+                output_value = 1
+            elif (input_value_converted>300):
+                output_value = 2
+        except:
+            pass
+
+        return output_value
+
+    def discretize_il6(self, input_value_converted, padding_for_missing_values=-1):
+        output_value = padding_for_missing_values
+
+        try:
+            if ((input_value_converted<40) and (input_value_converted>0)):
+                output_value = 0
+            elif (input_value_converted>=40):
+                output_value = 1
+        except:
+            pass
+
+        return output_value
+
 '''
     NOTE: this code is ad-hoc to the problem herein proposed. Therefore, if
     you want to use it for another different problem, it could be probably more
@@ -99,8 +247,13 @@ def convert_si_no_desconocido_missing_to_integer(input_value, \
 # This function allows to convert the fields to the desired format.
 # This is an ad-hoc function. "padding_for missing_values" will determine what
 # value will be in those cells with missing values in the original dataset.
-def convert_fields(file_data, padding_for_missing_values=-1):
+def convert_fields(file_data, padding_for_missing_values=-1, discretize=False):
     output_list = []
+    if (discretize):
+        discretizer_obj = Discretizer()
+    else:
+        discretizer_obj = No_Discretizer()
+
     for item_aux in file_data:
         row_list_aux = []
         column_number_aux = 0
@@ -209,31 +362,47 @@ def convert_fields(file_data, padding_for_missing_values=-1):
                     row_list_aux.append(converted_value)
                 # linfocitos
                 if (column_number_aux==28):
-                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
+                    converted_value = convert_double_attributes(field.replace(',', '.'))
+                    converted_value = discretizer_obj.discretize_linfocitos(converted_value)
+                    row_list_aux.append(converted_value)
                 # linfocitos_porcentaje
                 if (column_number_aux==29):
                     row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
                 # dimeros_d
                 if (column_number_aux==30):
-                    row_list_aux.append(convert_integer_attributes(field))
+                    converted_value = convert_integer_attributes(field)
+                    converted_value = discretizer_obj.discretize_dimeros_d(converted_value)
+                    row_list_aux.append(converted_value)
                 # ldh
                 if (column_number_aux==31):
-                    row_list_aux.append(convert_integer_attributes(field))
+                    converted_value = convert_integer_attributes(field)
+                    converted_value = discretizer_obj.discretize_ldh(converted_value)
+                    row_list_aux.append(converted_value)
                 # creatinina
                 if (column_number_aux==32):
-                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
+                    converted_value = convert_double_attributes(field.replace(',', '.'))
+                    converted_value = discretizer_obj.discretize_creatinina(converted_value)
+                    row_list_aux.append(converted_value)
                 # filtrado_glomerular_estimado
                 if (column_number_aux==33):
-                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
+                    converted_value = convert_double_attributes(field.replace(',', '.'))
+                    converted_value = discretizer_obj.discretize_filtrado_glomerular_estimado(converted_value)
+                    row_list_aux.append(converted_value)
                 # prc
                 if (column_number_aux==34):
-                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
+                    converted_value = convert_double_attributes(field.replace(',', '.'))
+                    converted_value = discretizer_obj.discretize_proteina_c_reactiva(converted_value)
+                    row_list_aux.append(converted_value)
                 # ferritina
                 if (column_number_aux==35):
-                    row_list_aux.append(convert_integer_attributes(field))
+                    converted_value = convert_integer_attributes(field)
+                    converted_value = discretizer_obj.discretize_ferritina(converted_value)
+                    row_list_aux.append(converted_value)
                 # il6
                 if (column_number_aux==36):
-                    row_list_aux.append(convert_double_attributes(field.replace(',', '.')))
+                    converted_value = convert_double_attributes(field.replace(',', '.'))
+                    converted_value = discretizer_obj.discretize_il6(converted_value)
+                    row_list_aux.append(converted_value)
             except:
                 row_list_aux.append(field)
 
@@ -380,10 +549,10 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
         pass
 
     def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+                            padding_for_missing_values=-1, discretize=False):
         headers, file_data = read_csv_file(input_filename)
         list_with_fields_converted = \
-            np.array(convert_fields(file_data, padding_for_missing_values))
+            np.array(convert_fields(file_data, padding_for_missing_values, discretize))
 
         indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                       23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
