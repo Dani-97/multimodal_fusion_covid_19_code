@@ -32,6 +32,7 @@
 - **datasets/utils_balancing.py:** clases para el balanceo de los datos (oversampling, undersampling, no balanceo...).
 - **datasets/utils_features.py:** clases que incluyen las llamadas a métodos de selección y extracción de características.
 - **datasets/utils_datasets.py:** clases que contienen las diferentes aproximaciones para dividir los datos en particiones (Holdout, Cross Validation, Bootstraping o cualquier aproximación que se considere conveniente).
+- El fichero **list/list_without_weird_rows.cfg** contiene una lista que especifica el código de todas aquellas filas que no tengan un tiempo de urgencia demasiado grande (almacenada en binario utilizando pickle). Cabe destacar que el criterio para decidir si un tiempo de urgencia es muy grande o no, puede ser variable. 
 
 **FICHEROS DE UTILIDAD PARA LOS CLASIFICADORES**
 

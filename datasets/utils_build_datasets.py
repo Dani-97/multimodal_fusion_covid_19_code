@@ -972,7 +972,7 @@ class Build_Dataset_Only_Hospitalized_Without_Weird_Rows(Build_Dataset_Only_Hosp
     def __get_indexes_without_weird_rows__(self, dataset_rows):
         indexes_list = []
 
-        with open('./analysis/list_without_weird_rows.cfg', 'rb') as output_file:
+        with open('./datasets/list_without_weird_rows.cfg', 'rb') as output_file:
             codes_without_weird_rows = pickle.load(output_file)
 
         for code_aux in codes_without_weird_rows:
