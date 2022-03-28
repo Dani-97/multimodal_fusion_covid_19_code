@@ -4,6 +4,7 @@ import sys
 sys.path.append('../')
 import numpy as np
 import os
+import pickle
 from utils import read_csv_file, read_headers_file
 from utils import write_csv_file, convert_si_no_to_int
 from deep_features.utils_architectures import *
@@ -482,8 +483,8 @@ class Super_Class_Build_Dataset():
     def __init__(self):
         pass
 
-    def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
         print('++++ WARNING: the method build_dataset has not been implemented for this approach!')
 
     def build_dataset_with_deep_features(self):
@@ -494,8 +495,8 @@ class Build_Dataset_Hospitalized_And_Urgencies(Super_Class_Build_Dataset):
     def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
         headers, file_data = read_csv_file(input_filename)
         list_with_fields_converted = \
             np.array(convert_fields(file_data, padding_for_missing_values))
@@ -548,7 +549,7 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
     def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file,
+    def build_dataset(self, input_filename, headers_file, \
                             padding_for_missing_values=-1, discretize=False):
         headers, file_data = read_csv_file(input_filename)
         list_with_fields_converted = \
@@ -740,8 +741,8 @@ class Build_Dataset_Only_Hospitalized_Only_Less_65(Build_Dataset_Only_Hospitaliz
     def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
         headers_to_store, dataset_rows = \
             super().build_dataset(input_filename, headers_file, \
                                                      padding_for_missing_values)
@@ -771,7 +772,7 @@ class Build_Dataset_Only_Hospitalized_Joint_Inmunosupression(Build_Dataset_Only_
         return inmunosupressed_list
 
     def build_dataset(self, input_filename, headers_file, \
-                                             padding_for_missing_values=-1):
+                            padding_for_missing_values=-1, discretize=False):
         headers_to_store, dataset_rows = \
             super().build_dataset(input_filename, headers_file, padding_for_missing_values)
 
@@ -805,7 +806,7 @@ class Build_Dataset_Only_Hospitalized_Only_Clinical_Data(Build_Dataset_Only_Hosp
         pass
 
     def build_dataset(self, input_filename, headers_file, \
-                                             padding_for_missing_values=-1):
+                            padding_for_missing_values=-1, discretize=False):
         headers_to_store, dataset_rows = \
             super().build_dataset(input_filename, headers_file, padding_for_missing_values)
         headers_to_store = np.array(headers_to_store)[[0, 1, 2, 19, 20, 22, 25, 28]].tolist()
@@ -827,8 +828,8 @@ class Build_Dataset_Only_Urgencies(Super_Class_Build_Dataset):
     def __init__(self, **kwargs):
         pass
 
-    def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
         headers, file_data = read_csv_file(input_filename)
         list_with_fields_converted = \
             np.array(convert_fields(file_data, padding_for_missing_values))
@@ -909,8 +910,8 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time(Super_Class_Build_Datase
 
         return file_data_with_urgency_time
 
-    def build_dataset(self, input_filename, headers_file,
-                                             padding_for_missing_values=-1):
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
         headers, file_data = read_csv_file(input_filename)
         list_with_fields_converted = \
             np.array(convert_fields(file_data, padding_for_missing_values))
@@ -952,8 +953,8 @@ class Build_Dataset_Only_Hospitalized_With_Discretized_Urgency_Time(Build_Datase
 
             return dataset_rows.tolist()
 
-        def build_dataset(self, input_filename, headers_file,
-                                                 padding_for_missing_values=-1):
+        def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
             headers_to_store, dataset_rows = \
                 super().build_dataset(input_filename, headers_file, \
                     padding_for_missing_values)
@@ -961,3 +962,62 @@ class Build_Dataset_Only_Hospitalized_With_Discretized_Urgency_Time(Build_Datase
             dataset_rows = self.__discretize_urgency_time__(dataset_rows)
 
             return headers_to_store, dataset_rows
+
+class Build_Dataset_Only_Hospitalized_Without_Weird_Rows(Build_Dataset_Only_Hospitalized, \
+                                                    Super_Class_Build_Dataset):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def __get_indexes_without_weird_rows__(self, dataset_rows):
+        indexes_list = []
+
+        with open('./analysis/list_without_weird_rows.cfg', 'rb') as output_file:
+            codes_without_weird_rows = pickle.load(output_file)
+
+        for code_aux in codes_without_weird_rows:
+            indexes_list.append(np.array(dataset_rows)[:, 0].tolist().index(code_aux))
+
+        return indexes_list
+
+    def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
+        headers, file_data = read_csv_file(input_filename)
+        list_with_fields_converted = \
+            np.array(convert_fields(file_data, padding_for_missing_values, discretize))
+
+        # Remove all the 'weird' rows (i.e., the rows with a very big urgency
+        # time).
+        indexes_without_weird_rows = self.__get_indexes_without_weird_rows__(file_data)
+        file_data = np.array(file_data)[indexes_without_weird_rows, :].tolist()
+
+        indexes = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
+                      23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 5]
+        hospitalized_cases_indexes = np.where(np.array(file_data)[:, indexes[0]]=='Hospitalizados')
+        dataset_rows = list_with_fields_converted[:, indexes]
+        dataset_rows = np.array(dataset_rows).astype(str)
+
+        # Using only the "Hospitalized" patients to build the dataset.
+        dataset_rows = dataset_rows[hospitalized_cases_indexes, :]
+
+        headers = np.array(read_headers_file(headers_file))
+        # As exitus is selected as the output, the word 'exitus' will be replaced
+        # with output to store it like this in the CSV file.
+        change_exitus_to_output = lambda input: input.replace('exitus', 'output')
+        headers_to_store = list(map(change_exitus_to_output, headers[indexes]))
+
+        # Removing duplicated data.
+        dataset_rows = np.unique(dataset_rows[0], axis=0)
+
+        # Remove the cohort, because it is not necessary in this particular case.
+        headers_to_store = headers_to_store[1:]
+        dataset_rows = dataset_rows[:, 1:]
+
+        # As some of the attributes are previously removed, the indexes change and
+        # therefore they must be specified again.
+        new_indexes_to_check = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, \
+                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+        dataset_rows = remove_useless_data(dataset_rows, \
+                              new_indexes_to_check, padding_for_missing_values)
+
+        return headers_to_store, dataset_rows
