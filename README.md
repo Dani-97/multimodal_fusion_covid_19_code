@@ -69,6 +69,8 @@ Con respecto a los ficheros .py, existen principalmente 2 tipos:
 
 - *Caso de uso 3*: **Entrenamiento de los modelos de aprendizaje máquina**. Para este caso de uso, una vez que los datasets han sido construídos por medio de la implementación del caso de uso anterior, se procede a entrenar los modelos de aprendizaje máquina.
 
+- *Caso de uso 4*: **Análisis de los datasets construídos**. Este caso de uso permite estudiar la correlación entre las variables de entrada y los valores de salida para los diferentes datasets que se han construído a partir del dataset original.
+
 **Ficheros no ejecutables:** estos ficheros de Python no pueden ejecutarse por sí mismos pero contienen el código realmente importante de las ejecuciones. Por ejemplo, hay un fichero de utilidades dentro de la carpeta "classifiers" que se llama "utils_classifiers.py" donde se crean los clasificadores y donde se especifican sus correspondientes métodos de entrenamiento, de test y todos aquellos que sean necesarios. Cuando desde un fichero ejecutable se quiere entrenar un modelo y validarlo, lo que se hace es:
 
 **1. Crear el modelo.**
@@ -77,7 +79,7 @@ Con respecto a los ficheros .py, existen principalmente 2 tipos:
 
 **3. Llamar posteriormente a la función de test sobre ese modelo entrenado para obtener la salida correspondiente.**
 
-**4. Llamar a la función para obtener las métricas de evaluación. **
+**4. Llamar a la función para obtener las métricas de evaluación.**
 
 Por tanto, en resumen, el fichero ejecutable es el que crea los objetos y llama a los métodos pero es el código de las clases implementadas en los ficheros de utilidad el que hace el trabajo realmente importante.
 
