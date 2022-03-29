@@ -1,9 +1,10 @@
 import argparse
 from classifiers.utils_classifiers import *
 from regressors.utils_regressors import *
+from datasets.utils_balancing import *
 from datasets.utils_datasets import *
 from datasets.utils_features import *
-from datasets.utils_balancing import *
+from datasets.utils_normalization import *
 import numpy as np
 from utils import convert_metrics_dict_to_list, clear_csv_file
 
@@ -24,6 +25,8 @@ def main():
                             choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'MLP_Classifier', 'XGBoost_Classifier', \
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
+    parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
+                            choices=['No', 'Standardization', 'Normalization'], required=True)
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
@@ -31,10 +34,10 @@ def main():
     parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
                                               action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
-                                              choices=['Holdout'], required=True)
+                                              choices=['Holdout', 'Cross_Validation'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select in the case of using SelectKBest feature selection algorithm", type=int)
     parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
-    parser.add_argument('--nofrepetitions', help="Number of times that the trainig process must be performed", type=int, required=True)
+    parser.add_argument('--nofsplits', help="Number of different holdouts to be performed or number of folds of the cross validation", type=int, required=True)
     parser.add_argument("--n_neighbors", help="Number of neighbors in case of training a kNN classifier", type=int)
     parser.add_argument("--test_size", help="Size of the the test subset (in percentage) in case of using Holdout", type=float)
     parser.add_argument("--plot_data", action='store_true', \
@@ -57,13 +60,18 @@ def main():
     universal_factory = UniversalFactory()
 
     # Creating the splitting object with the universal factory.
-    kwargs = {'test_size': args.test_size}
+    kwargs = {'test_size': args.test_size, 'noffolds': args.nofsplits}
     splitting = universal_factory.create_object(globals(), args.splitting + '_Split', kwargs)
     # Retrieving the feature selection method with the universal factory.
     kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
     feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
 
     attrs_headers, input_data, output_data = splitting.load_dataset(args.dataset_path)
+
+    # These lines execute the preprocessing step in case one was selected.
+    kwargs = {}
+    preprocessing = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
+    input_data = preprocessing.execute_preprocessing(input_data.astype(np.float64))
 
     # The input_data variable is overwritten with the data obtained after the
     # feature selection (or no feature selection process).
@@ -80,8 +88,11 @@ def main():
         print('++++ As the user decided, the report of the features' + \
             ' selection algorithm will not be stored to the logging results file')
 
-    for it in range(0, args.nofrepetitions):
+    for it in range(0, args.nofsplits):
         print('**** Starting repetition number %d...'%it)
+        # For certain splitting methods, this line does not do anything
+        # (for example, in the case of the holdout).
+        splitting.set_partition(it)
         # Split into training and test set
         subsets = splitting.split(input_data, output_data)
         input_train_subset, input_test_subset, \

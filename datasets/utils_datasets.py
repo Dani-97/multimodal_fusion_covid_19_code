@@ -2,6 +2,7 @@ import csv
 import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 import torch
 import torchvision
 
@@ -47,6 +48,12 @@ class Super_Splitting_Class():
 
         return headers, input_data, output_data
 
+    def set_partition(self, nofpartition):
+        pass
+
+    def split(self, input_data, output_data):
+        pass
+
 class Holdout_Split(Super_Splitting_Class):
 
     def __init__(self, **kwargs):
@@ -54,12 +61,48 @@ class Holdout_Split(Super_Splitting_Class):
         print('++++ The dataset will be splitted in a Holdout fashion')
         print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
 
-    def load_dataset(self, dataset_path):
-        return super().load_dataset(dataset_path)
+    # The method set_partition will not do anything for this splitting method.
 
     # input_data variable refers to the data that will be used as input of
     # the classifier and output refers to the labels.
     def split(self, input_data, output_data):
         splitting_subsets = train_test_split(input_data, output_data, test_size=self.test_size)
+
+        return splitting_subsets
+
+    # The rest of the methods are inherited from the parent class.
+
+class Cross_Validation_Split(Super_Splitting_Class):
+
+    def __init__(self, **kwargs):
+        self.noffolds = int(kwargs['noffolds'])
+        print('++++ The dataset will be splitted in a Cross Validation fashion with %d folds'%\
+                self.noffolds)
+        self.splitting_module = KFold(n_splits=self.noffolds)
+        self.partitions = None
+
+    def set_partition(self, nofpartition):
+        self.nofpartition = nofpartition
+
+    def split(self, input_data, output_data):
+        # The first time this function is called, the partitions of the input
+        # dataset are made. The next times the function is called, the
+        # already made set of partitions is used.
+        if (self.partitions==None):
+            self.partitions = []
+            joint_subsets_generator = self.splitting_module.split(input_data)
+            for train_subset, test_subset in joint_subsets_generator:
+                self.partitions.append((train_subset, test_subset))
+
+        current_train_folds = self.partitions[self.nofpartition][0]
+        current_test_fold = self.partitions[self.nofpartition][1]
+
+        input_train_subset = input_data[current_train_folds, :]
+        output_train_subset = output_data[current_train_folds]
+        input_test_subset = input_data[current_test_fold, :]
+        output_test_subset = output_data[current_test_fold]
+
+        splitting_subsets = input_train_subset, input_test_subset, \
+                                 output_train_subset, output_test_subset
 
         return splitting_subsets
