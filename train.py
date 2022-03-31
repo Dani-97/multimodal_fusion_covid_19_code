@@ -6,6 +6,7 @@ from datasets.utils_datasets import *
 from datasets.utils_features import *
 from datasets.utils_normalization import *
 import numpy as np
+import os
 from utils import convert_metrics_dict_to_list, clear_csv_file
 
 class UniversalFactory():
@@ -83,6 +84,8 @@ def main():
     # This function will store the report of the feature selection process if it
     # is available and if the user has decided to store it.
     if (args.store_features_selection_report):
+        dir_to_store_results = os.path.dirname(args.logs_file_path)
+        feature_retrieval.set_dir_to_store_results(dir_to_store_results)
         feature_retrieval.store_report(args.logs_file_path, attrs_headers)
     else:
         print('++++ As the user decided, the report of the features' + \

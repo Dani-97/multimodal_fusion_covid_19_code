@@ -52,6 +52,9 @@ class Super_Feature_Retrieval():
     def store_report(self, csv_file_path, attrs_headers, append=True):
         pass
 
+    def set_dir_to_store_results(self, dir_to_store_results):
+        self.dir_to_store_results = dir_to_store_results
+
 # An object of this class will be instantiated if no feature selection was
 # chosen.
 class No_Feature_Retrieval(Super_Feature_Retrieval):
@@ -87,16 +90,19 @@ class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
 
         return output_selection
 
-    def __give_names_to_features(self, attrs_headers, top_features_list):
+    def __give_names_to_features(self, attrs_headers, \
+                                   top_features_list, features_scores_list):
         top_features_with_names_list = []
 
         for item_aux in top_features_list:
-            item_with_name_aux = item_aux + ': ' + attrs_headers[int(item_aux)]
+            item_with_name_aux = item_aux + ': ' + \
+                      attrs_headers[int(item_aux)] + \
+                        ' (score = %d)'%features_scores_list[int(item_aux)]
             top_features_with_names_list.append(item_with_name_aux)
 
         return top_features_with_names_list
 
-    def store_report(self, csv_file_path, attrs_headers, append=True):
+    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
         if (append):
             file_mode = 'a'
         else:
@@ -106,11 +112,49 @@ class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
             csv_writer = csv.writer(csv_file, delimiter=',')
 
             top_features = np.array(self.reliefF_report['top_features']).astype(str)
+            features_scores = np.array(self.reliefF_report['feature_scores']).astype(np.float64)
             top_features_with_names = \
-                    self.__give_names_to_features(attrs_headers, top_features)
+                    self.__give_names_to_features(attrs_headers, top_features, features_scores)
             csv_writer.writerow(['top_features'])
             csv_writer.writerow(top_features_with_names)
             csv_writer.writerow([])
+
+    # This function plots the report of the scores and the ranking of the
+    # attributes after the feature selection algorithm is applied.
+    def __plot_report__(self, attrs_headers, dir_to_store_results):
+        top_features_idx = np.flip(np.array(self.reliefF_report['top_features']))
+        features_scores = np.array(self.reliefF_report['feature_scores']).astype(np.float64)
+        features_scores = features_scores[top_features_idx]
+
+        fig, ax = plt.subplots(figsize=(27.5, 10))
+        y_pos = list(range(len(features_scores)))
+        ax.barh(y_pos, features_scores, align='center')
+
+        plt.title('Top features scores ranking')
+        plt.tick_params(labeltop=True, labelright=True)
+        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xlabel('Feature score')
+        plt.ylabel('Feature')
+
+        # It is important to note that x and y are flipped, because we are
+        # using barh.
+        for x_coordinate, y_coordinate in enumerate(features_scores):
+            text_to_show = str(int(y_coordinate))
+            if (y_coordinate<0):
+                displacement = -(len(text_to_show)+20)
+            else:
+                displacement = len(text_to_show)
+            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+
+        # ax.grid(True)
+
+        output_filename = '%s/%s'%(dir_to_store_results, 'reliefF_report.pdf')
+        plt.savefig(output_filename)
+        print('++++ The report of ReliefF top features ranking has been stored at %s'%output_filename)
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
+        self.__plot_report__(attrs_headers, self.dir_to_store_results)
 
 class PCA_Feature_Retrieval(Super_Feature_Retrieval):
 
@@ -129,4 +173,4 @@ class PCA_Feature_Retrieval(Super_Feature_Retrieval):
         return transformed_data
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
-        print('+++++ WARNING: this method is still not implemented for PCA!')
+        print('+++++ WARNING: the method store_report is not implemented for PCA!')
