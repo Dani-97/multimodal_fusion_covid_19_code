@@ -68,7 +68,7 @@ class Super_Model_Class():
 class AlexNet_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = torchvision.models.alexnet()
+        self.deep_features_model = torchvision.models.alexnet(pretrained=True)
         self.device = kwargs['device']
 
     def extract_deep_features(self, input_data):
@@ -77,6 +77,7 @@ class AlexNet_Deep_Features_Model(Super_Model_Class):
         device_chosen = 'Move_To_' + self.device
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
+        self.deep_features_model.train(False)
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
 
         input_data = move_to_device_module.execute_move_to_device(input_data)
@@ -118,6 +119,7 @@ class VGG_16_Deep_Features_Model(Super_Model_Class):
         device_chosen = 'Move_To_' + self.device
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
+        self.deep_features_model.train(False)
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
 
         input_data = move_to_device_module.execute_move_to_device(input_data)

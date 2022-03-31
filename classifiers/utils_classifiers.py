@@ -148,6 +148,12 @@ class Super_Classifier_Class():
     def load_model(self, filename):
         self.classifier = pickle.load(open(filename, 'rb'))
 
+    # For the classifiers that do not contain any kind of decision tree, it is
+    # strictly necessary in order to provide an explanation of the decisions
+    # of the corresponding machine learning model.
+    def load_input_data_for_explainability(self, input_data):
+        self.input_data = input_data
+
     # This function must be reimplemented by those classifiers with
     # explainability. By default, it displays a message that shows that the
     # used model has not explainability.

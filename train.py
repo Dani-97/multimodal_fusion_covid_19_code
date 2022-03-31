@@ -125,6 +125,9 @@ def main():
         # This function will store the number of the current repetition (the value of "it")
         # and the metrics of the current repetition.
         model.store_model_metrics(it, metrics_values_list, args.logs_file_path)
+        # For those models that are not decision trees, this is strictly
+        # necessary to execute the SHAP algorithm.
+        model.load_input_data_for_explainability(input_test_subset)
         # Here we obtain the explainability of the model if it is available.
         model.explainability()
         print('---- NOTE: the logs of this repetition are now stored at %s\n'%args.logs_file_path)
