@@ -141,7 +141,7 @@ class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
         for x_coordinate, y_coordinate in enumerate(features_scores):
             text_to_show = str(int(y_coordinate))
             if (y_coordinate<0):
-                displacement = -(len(text_to_show)+20)
+                displacement = -(len(text_to_show)-50+(y_coordinate))
             else:
                 displacement = len(text_to_show)
             ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
