@@ -48,6 +48,28 @@ class Super_Splitting_Class():
 
         return headers, input_data, output_data
 
+    # This function checks the type of a single attribute.
+    def __check_attrs_type_aux__(self, attr_values_list):
+        attr_type = 'categorical'
+
+        for value_aux in attr_values_list:
+            try:
+                int(value_aux)
+            except:
+                attr_type = 'numerical'
+                break
+
+        return attr_type
+
+    # This function checks which attributes are categorical and which ones not.
+    def check_attrs_type(self, input_data):
+        nofattrs = np.shape(input_data)[1]
+        attrs_types_list = []
+
+        for current_attr_idx in range(0, nofattrs):
+            current_attr_type_aux = self.__check_attrs_type_aux__(input_data[1:, current_attr_idx])
+            attrs_types_list.append(current_attr_type_aux)
+
     def set_partition(self, nofpartition):
         pass
 

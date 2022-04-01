@@ -3,7 +3,7 @@ import numpy as np
 from ReliefF import ReliefF
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.feature_selection import f_classif
 import matplotlib.pyplot as plt
 
 def plot_2D_distribution(input_data, output_data):
@@ -54,6 +54,9 @@ class Super_Feature_Retrieval():
 
     def set_dir_to_store_results(self, dir_to_store_results):
         self.dir_to_store_results = dir_to_store_results
+
+    def set_attributes_types(self, attrs_types):
+        self.attrs_types = attrs_types
 
 # An object of this class will be instantiated if no feature selection was
 # chosen.
@@ -146,8 +149,6 @@ class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
                 displacement = len(text_to_show)
             ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
-        # ax.grid(True)
-
         output_filename = '%s/%s'%(dir_to_store_results, 'reliefF_report.pdf')
         plt.savefig(output_filename)
         print('++++ The report of ReliefF top features ranking has been stored at %s'%output_filename)
@@ -164,36 +165,33 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
         print('---- Number of top features: %d'%self.noftopfeatures)
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        self.selectKBest_obj = SelectKBest(mutual_info_classif, k=self.noftopfeatures)
-        converted_data = self.selectKBest_obj.fit_transform(input_data, output_data)
-        convert_names_to_idxs = lambda input: int(input.replace('x', ''))
+        self.selectKBest_obj = SelectKBest(f_classif, k='all')
+        self.selectKBest_obj.fit(input_data, output_data)
         self.top_features_idxs = self.selectKBest_obj.get_support(True)
         self.features_scores = self.selectKBest_obj.scores_
-
-        return converted_data
-
-    def __give_names_to_features(self, attrs_headers, \
-                                   top_features_list, features_scores_list):
-        top_features_with_names_list = []
-
         self.features_scores_with_keys = {}
 
-        it = 0
-        for current_idx_aux in self.top_features_idxs:
-            self.features_scores_with_keys[attrs_headers[current_idx_aux]] = \
-                                                    self.features_scores[it]
-            it+=1
+        for feature_idx_aux in self.top_features_idxs:
+            self.features_scores_with_keys[feature_idx_aux] = \
+                self.features_scores[feature_idx_aux]
 
         self.top_features_ordered = sorted(self.features_scores_with_keys, \
                           key=self.features_scores_with_keys.get, reverse=True)
 
-        for current_feature_name_aux in self.top_features_ordered:
-            current_score_aux = self.features_scores_with_keys[current_feature_name_aux]
-            item_with_name_aux = current_feature_name_aux + \
-                                              ' (np.log(score) = %.4f)'%np.log(current_score_aux)
-            top_features_with_names_list.append(item_with_name_aux)
+        idxs_for_converted_data = self.top_features_ordered[0:self.noftopfeatures]
+        converted_data = input_data[:, idxs_for_converted_data]
 
-        return top_features_with_names_list
+        return converted_data
+
+    def __give_names_to_features(self, attrs_headers, top_features_idxs):
+        attrs_headers_np = np.array(attrs_headers)
+        top_features_with_names = []
+
+        for current_feature_idx_aux in top_features_idxs:
+            top_features_with_names.append(attrs_headers_np[current_feature_idx_aux] + \
+                        ' (score = %.2f)'%(self.features_scores_with_keys[current_feature_idx_aux]))
+
+        return top_features_with_names
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
         if (append):
@@ -201,9 +199,9 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
         else:
             file_mode = 'w'
 
-        top_features_with_names = self.__give_names_to_features(attrs_headers, \
-                self.top_features_idxs, \
-                    self.selectKBest_obj.scores_)
+        top_features_with_names = \
+            self.__give_names_to_features(attrs_headers, \
+                                              self.top_features_ordered)
 
         with open(csv_file_path, file_mode) as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')

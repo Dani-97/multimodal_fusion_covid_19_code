@@ -68,6 +68,9 @@ def main():
     feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
 
     attrs_headers, input_data, output_data = splitting.load_dataset(args.dataset_path)
+    # This list specifies if the attributes of the input dataset are categorical
+    # or numerical.
+    attrs_types_list = splitting.check_attrs_type(input_data)
 
     # These lines execute the preprocessing step in case one was selected.
     kwargs = {}
@@ -75,7 +78,9 @@ def main():
     input_data = preprocessing.execute_preprocessing(input_data.astype(np.float64))
 
     # The input_data variable is overwritten with the data obtained after the
-    # feature selection (or no feature selection process).
+    # feature selection. If the user decided not to use feature selection, then
+    # this function will not actually do anything.
+    feature_retrieval.set_attributes_types(attrs_types_list)
     input_data = feature_retrieval.execute_feature_retrieval(input_data, output_data, plot_data=args.plot_data)
 
     # If the CSV logs file had previous content, then this function will remove
