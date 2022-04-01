@@ -193,7 +193,36 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
 
         return top_features_with_names
 
-    def store_report(self, csv_file_path, attrs_headers, append=True):
+    def __plot_report__(self, attrs_headers, dir_to_store_results):
+        top_features_idx = self.top_features_ordered
+        features_scores = np.array(self.features_scores).astype(np.float64)
+        features_scores = features_scores[top_features_idx]
+
+        fig, ax = plt.subplots(figsize=(27.5, 10))
+        y_pos = list(range(len(features_scores)))
+        ax.barh(y_pos, features_scores, align='center')
+
+        plt.title('Top features scores ranking')
+        plt.tick_params(labeltop=True, labelright=True)
+        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xlabel('Feature score')
+        plt.ylabel('Feature')
+
+        # It is important to note that x and y are flipped, because we are
+        # using barh.
+        for x_coordinate, y_coordinate in enumerate(features_scores):
+            text_to_show = str(int(y_coordinate))
+            if (y_coordinate<0):
+                displacement = -(len(text_to_show)-50+(y_coordinate))
+            else:
+                displacement = len(text_to_show)
+            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+
+        output_filename = '%s/%s'%(dir_to_store_results, 'ftest_report.pdf')
+        plt.savefig(output_filename)
+        print('++++ The report of ReliefF top features ranking has been stored at %s'%output_filename)
+
+    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
         if (append):
             file_mode = 'a'
         else:
@@ -209,6 +238,10 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
             csv_writer.writerow(['top_features'])
             csv_writer.writerow(top_features_with_names)
             csv_writer.writerow([])
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
+        self.__plot_report__(attrs_headers, self.dir_to_store_results)
 
 class PCA_Feature_Retrieval(Super_Feature_Retrieval):
 
