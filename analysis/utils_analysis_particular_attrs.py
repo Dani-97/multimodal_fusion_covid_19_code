@@ -38,6 +38,7 @@ class Analysis_Covariances():
 
         regression_obj = LinearRegression().fit(var1[ok_idxs].reshape(-1, 1), \
                                                 var2[ok_idxs].reshape(-1, 1))
+
         min_value = 0
         distance_max_min = np.max(var1)-min_value
         regression_x_values = np.arange(min_value, np.max(var1), \

@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn import preprocessing
 
 class No_Preprocessing():
@@ -8,7 +9,7 @@ class No_Preprocessing():
     def execute_preprocessing(self, input_data):
         return input_data
 
-class Standardization_Preprocessing():
+class Standardization_Preprocessing(No_Preprocessing):
 
     def __init__(self, **kwargs):
         self.preprocessing_module = preprocessing.StandardScaler()
@@ -19,7 +20,7 @@ class Standardization_Preprocessing():
 
         return preprocessed_data
 
-class Normalization_Preprocessing():
+class Normalization_Preprocessing(No_Preprocessing):
 
     def __init__(self, **kwargs):
         self.preprocessing_module = preprocessing.Normalizer()

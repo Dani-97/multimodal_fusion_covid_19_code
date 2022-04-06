@@ -19,7 +19,6 @@ class Super_Classifier_Class():
         self.classifier.fit(input_data, output_data)
 
     def test(self, input_data):
-        self.classifier.predict(input_data)
         classifier_output = self.classifier.predict(input_data), \
                                  self.classifier.predict_proba(input_data)
 

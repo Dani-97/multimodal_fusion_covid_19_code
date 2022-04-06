@@ -25,10 +25,11 @@ def main():
         choices=['Only_Hospitalized', 'Only_Urgencies', 'Only_Hospitalized_With_Urgency_Time', \
                  'Hospitalized_And_Urgencies', 'Only_Hospitalized_Only_Clinical_Data', \
                  'Only_Hospitalized_Joint_Inmunosupression', 'Only_Hospitalized_Only_Less_65', \
-                 'Only_Hospitalized_With_Discretized_Urgency_Time', 'Only_Hospitalized_Without_Weird_Rows'], \
+                 'Only_Hospitalized_With_Discretized_Urgency_Time', 'Only_Hospitalized_Without_Weird_Rows', \
+                 'Only_Hospitalized_With_Urgency_Time_Without_Weird_Rows'], \
                  help='This specifies the selected approach')
     parser.add_argument('--padding_missing_values', type=int, \
-                 help='It specifies the value that will be used to fill the cells with missing values.' +
+                 help='It specifies the value that will be used to fill the cells with missing values. ' +
                  'If not specified, then this value will be -1.')
     parser.add_argument('--populated_threshold', type=float, required=True, \
                  help='This specifies the minimum proportion of non missing values that each row must have' + \

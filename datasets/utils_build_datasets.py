@@ -177,11 +177,11 @@ def convert_cohorte(input_value):
     output_value = -1
 
     if (input_value=='Hospitalizados'):
-        output_value = 0
-    elif (input_value=='Residencias'):
         output_value = 1
-    elif (input_value=='Urgencias'):
+    elif (input_value=='Residencias'):
         output_value = 2
+    elif (input_value=='Urgencias'):
+        output_value = 0
 
     return output_value
 
@@ -930,6 +930,29 @@ class Build_Dataset_Only_Hospitalized_With_Urgency_Time(Super_Class_Build_Datase
         dataset_rows = file_data_with_urgency_time
 
         return headers_to_store, dataset_rows
+
+class Build_Dataset_Only_Hospitalized_With_Urgency_Time_Without_Weird_Rows(Build_Dataset_Only_Hospitalized_With_Urgency_Time):
+
+        def __init__(self, **kwargs):
+            pass
+
+        def build_dataset(self, input_filename, headers_file, \
+                            padding_for_missing_values=-1, discretize=False):
+            headers_to_store, dataset_rows = \
+                    super().build_dataset(input_filename, headers_file, \
+                                        padding_for_missing_values, discretize)
+
+            # These lines will remove all those rows with an extremely big
+            # urgency time.
+            filtered_dataset_rows = []
+            for row_aux in dataset_rows:
+                row_size = len(row_aux)
+                current_urgency_time = int(row_aux[row_size-1])
+                if (current_urgency_time<=90):
+                    filtered_dataset_rows.append(row_aux)
+
+            return headers_to_store, filtered_dataset_rows
+
 
 class Build_Dataset_Only_Hospitalized_With_Discretized_Urgency_Time(Build_Dataset_Only_Hospitalized_With_Urgency_Time, \
                                                     Super_Class_Build_Dataset):
