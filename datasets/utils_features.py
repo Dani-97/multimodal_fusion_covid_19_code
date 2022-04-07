@@ -220,7 +220,7 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
 
         output_filename = '%s/%s'%(dir_to_store_results, 'ftest_report.pdf')
         plt.savefig(output_filename)
-        print('++++ The report of ReliefF top features ranking has been stored at %s'%output_filename)
+        print('++++ The report of SelectKBest top features ranking has been stored at %s'%output_filename)
 
     def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
         if (append):

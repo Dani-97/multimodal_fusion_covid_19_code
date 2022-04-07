@@ -2,17 +2,21 @@
 
 ## Ficheros ejecutables
 
-- **analyze_input_dataset.py:** este fichero ejecutable se utiliza para analizar la información del dataset original, sin ningún tipo de procesamiento de los datos. Entre otras cosas, permite obtener los histogramas de la distribución de los valores de cada uno de los atributos de la tabla.
+- **analyze_input_dataset.py:** este fichero ejecutable se utiliza para analizar la información del dataset original, sin ningún tipo de procesamiento de los datos.
 
 - **analyze_associations.py:** este fichero ejecutable se emplea para analizar el fichero que contiene las asociaciones entre el nombre de las imágenes del dataset y el código que tienen asociado en la tabla CSV del CHUAC. 
 
 - **analyze_built_datasets.py:** este fichero ejecutable se utiliza para analizar la información de los datasets construidos a partir de la tabla original.
 
+- **analyze_particular_attrs.py:** este fichero ejecutable se utiliza para llevar a cabo análisis de covarianza entre 2 variables que se seleccionen.
+
 - **build_dataset.py:** este fichero ejecutable se utiliza para construir los datasets a partir de la tabla original pero sin incluir en ningún caso deep features. Se consideró que era muy complejo meter el caso de uso que solo obtiene tablas con datos clínicos en el mismo script que el que implementa la construcción de datasets que también incluyen datos de deep features, por lo que cada aproximación tiene su propio script.
 
 - **build_dataset_with_deep_features.py:** este fichero ejecutable se utiliza para construir los datasets extrayendo deep features de imágenes radiológicas.
 
-- **dataset_queries.py:** este fichero permite realizar queries contra el dataset. Esto se  consigue dado que el fichero CSV es leído por el script y convertido a un DataFrame de pandas. 
+- **dataset_queries.py:** este fichero ejecutable permite realizar queries contra el dataset. Esto se  consigue dado que el fichero CSV es leído por el script y convertido a un DataFrame de pandas. 
+
+- **obtain_features_ranking.py:** este fichero ejecutable permite realizar el proceso de feature selection sin llevar a cabo ningún entrenamiento. Es útil por si se desea únicamente estudiar el ránking de las variables en función de su score seleccionando además un determinado método de feature selection.
 
 - **train.py:** este fichero ejecutable permite entrenar un determinado modelo de aprendizaje máquina con los datos de un dataset construído.
 
@@ -24,6 +28,7 @@
 
 - **analysis/utils_analysis_built_datasets.py:** fichero para el análisis de los datos de los datasets construidos a partir del dataset original.
 - **analysis/utils_histograms.py:** fichero de utilidad para la creación de histogramas que muestren la distribución de los valores de los atributos en la tabla original.
+- **analysis/utils_analysis_particular_attrs.py:** fichero de utilidad empleado para analizar las covarianzas entre diferentes atributos.
 - Los ficheros **analysis/ad_hoc_items_original_dataset.cfg** y **analysis/ad_hoc_items_reduced_dataset.cfg** contienen datos ad-hoc necesarios para la obtención de los histogramas de los diferentes atributos.
 
 **FICHEROS DE UTILIDAD PARA LOS DATASETS**
@@ -32,6 +37,7 @@
 - **datasets/utils_balancing.py:** clases para el balanceo de los datos (oversampling, undersampling, no balanceo...).
 - **datasets/utils_features.py:** clases que incluyen las llamadas a métodos de selección y extracción de características.
 - **datasets/utils_datasets.py:** clases que contienen las diferentes aproximaciones para dividir los datos en particiones (Holdout, Cross Validation, Bootstraping o cualquier aproximación que se considere conveniente).
+- **datasets/utils_normalization.py:** fichero de utilidad que incluye clases que permiten realizar un preprocesamiento de los datos como es el caso de la estandarización o la normalización. 
 - El fichero **list/list_without_weird_rows.cfg** contiene una lista que especifica el código de todas aquellas filas que no tengan un tiempo de urgencia demasiado grande (almacenada en binario utilizando pickle). Cabe destacar que el criterio para decidir si un tiempo de urgencia es muy grande o no, puede ser variable.
 
 **FICHEROS DE UTILIDAD PARA LOS CLASIFICADORES**
@@ -46,15 +52,15 @@
 
 - **deep_features/utils_architectures.py:** este fichero contiene las clases que definen los diferentes clasificadores utilizados para la obtención de deep features, con todas las funcionalidades que son necesarias.
 
-## Ficheros de extensión .sh
+## Ficheros .py incluidos en la carpeta "execution_scripts"
 
-En estos ficheros se incluyen las llamadas a scripts de Python, tanto a modo de prueba (como es el caso de train_debugging.sh) como llevando a cabo tareas concretas utilizando clasificadores y extractores de características concretos.
+Estos ficheros contienen llamadas a otros scripts de ejecución de Python, tanto a modo de prueba como para lanzar un bloque de entrenamientos que compartan ciertas características comunes en modo batch. Un script de prueba para entrenamientos es el de "train_debugging.py". Por su parte, hay otros scripts como el de "train_only_hosp_with_ftest.py" que ejecutan todos los entrenamientos con todos los clasificadores utilizados y que además entrenan con el dataset que solo incluye pacientes hospitalizados y que realiza feature selection con el ANOVA f-test.
 
 # Detalles importantes del código de programación de este proyecto
 
 El código de programación de este proyecto está creado con la intención de respetar algunos patrones de diseño del software básicos y así facilitar el mantenimiento del mismo y el desarrollo de nuevas funcionalidades. En este README se describe brevemente el contenido de los ficheros y los directorios del proyecto.
 
-## Ficheros de extensión .py
+## Descripción de los ficheros de extensión .py (excepto aquellos incluidos en la carpeta "execution_scripts")
 
 Con respecto a los ficheros .py, existen principalmente 2 tipos:
 
@@ -63,13 +69,24 @@ Con respecto a los ficheros .py, existen principalmente 2 tipos:
 
 **Ficheros ejecutables:** estos ficheros implementan los diferentes casos de uso de la aplicación que se encuentra en este proyecto:
 
-- *Caso de uso 1*: **Análisis del dataset original**. Este caso de uso permite realizar diferentes análisis de la tabla original del CHUAC, es decir, sin ningún tipo de procesamiento previo. Una de las funcionalidades que proporciona este análisis es la creación de los histogramas que muestran la distribución de los valores de los diferentes atributos incluidos en el dataset.
+- *Caso de uso 1*: **Análisis de los datasets**.
+
+    - *Caso de uso 1.1*: **Análisis del dataset original**. Este caso de uso permite realizar diferentes análisis de la tabla original del CHUAC, es decir, sin ningún tipo de procesamiento previo. Una de las funcionalidades que proporciona este análisis es la creación de los histogramas que muestran la distribución de los valores de los diferentes atributos incluidos en el dataset.
+
+    - *Caso de uso 1.2*: **Análisis de los datasets construídos**. Este caso de uso permite estudiar la correlación entre las variables de entrada y los valores de salida para los diferentes datasets que se han construído a partir del dataset original.
+
+    - *Caso de uso 1.3*: **Análisis de la covarianza entre 2 atributos**. Este caso de uso permite estudiar la covarianza entre 2 variables arbitrarias del dataset que hayan sido previamente seleccionadas por el usuario del script.
 
 - *Caso de uso 2*: **Construcción de datasets**. Este caso de uso permite crear, a partir del dataset original del CHUAC, un nuevo dataset ya con todos los campos procesados, es decir, preparado para entrenar los diferentes modelos de aprendizaje (entre otras cosas, cambiando todos los datos a formato numérico, incluidas las variables categóricas y determinando las salidas que el sistema debe aprender).
 
-- *Caso de uso 3*: **Entrenamiento de los modelos de aprendizaje máquina**. Para este caso de uso, una vez que los datasets han sido construídos por medio de la implementación del caso de uso anterior, se procede a entrenar los modelos de aprendizaje máquina.
+    - *Caso de uso 2.1*: **Construcción de datasets solo con datos clínicos de la tabla.**
+    
+    - *Caso de uso 2.2*: **Construcción de datasets incluyendo la extracción de Deep Features**
 
-- *Caso de uso 4*: **Análisis de los datasets construídos**. Este caso de uso permite estudiar la correlación entre las variables de entrada y los valores de salida para los diferentes datasets que se han construído a partir del dataset original.
+
+- *Caso de uso 3*: **Obtención del ránking de features**. Este caso de uso permite llevar a cabo una feature selection, pero sin llegar a la fase de entrenar un modelo. Es de gran utilidad para cuando únicamente se quiere estudiar el ránking de las mejores características de un determinado dataset y con un determinado algoritmo de feature selection sin entrenar modelos de aprendizaje.
+
+- *Caso de uso 4*: **Entrenamiento de los modelos de aprendizaje máquina**. Para este caso de uso, una vez que los datasets han sido construídos por medio de la implementación del caso de uso anterior, se procede a entrenar los modelos de aprendizaje máquina.
 
 **Ficheros no ejecutables:** estos ficheros de Python no pueden ejecutarse por sí mismos pero contienen el código realmente importante de las ejecuciones. Por ejemplo, hay un fichero de utilidades dentro de la carpeta "classifiers" que se llama "utils_classifiers.py" donde se crean los clasificadores y donde se especifican sus correspondientes métodos de entrenamiento, de test y todos aquellos que sean necesarios. Cuando desde un fichero ejecutable se quiere entrenar un modelo y validarlo, lo que se hace es:
 
