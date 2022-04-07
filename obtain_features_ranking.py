@@ -44,6 +44,6 @@ def main():
     feature_retrieval.execute_feature_retrieval(input_data, output_data)
     feature_retrieval.set_dir_to_store_results(args.dir_to_store_results)
     csv_file_path = args.dir_to_store_results + '/' + args.csv_file_name
-    feature_retrieval.store_report(csv_file_path, attrs_headers)
+    feature_retrieval.store_report(csv_file_path, attrs_headers, False)
 
 main()

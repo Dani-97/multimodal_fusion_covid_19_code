@@ -4,6 +4,7 @@ from ReliefF import ReliefF
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_classif
+import math
 import matplotlib.pyplot as plt
 
 def plot_2D_distribution(input_data, output_data):
@@ -211,12 +212,12 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
         # It is important to note that x and y are flipped, because we are
         # using barh.
         for x_coordinate, y_coordinate in enumerate(features_scores):
-            text_to_show = str(int(y_coordinate))
-            if (y_coordinate<0):
-                displacement = -(len(text_to_show)-50+(y_coordinate))
+            if (math.isnan(y_coordinate)):
+                y_coordinate = 0
+                text_to_show = 'No variability'
             else:
-                displacement = len(text_to_show)
-            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+                text_to_show = str(int(y_coordinate))
+            ax.text(y_coordinate + 0.5, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
         output_filename = '%s/%s'%(dir_to_store_results, 'ftest_report.pdf')
         plt.savefig(output_filename)
