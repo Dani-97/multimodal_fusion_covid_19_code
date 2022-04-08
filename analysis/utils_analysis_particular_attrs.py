@@ -2,7 +2,53 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-class Analysis_Covariances():
+class Analysis_Dispersion_1D():
+
+    def __init__(self):
+        pass
+
+    def __remove_missing_values_idxs__(self, input_list):
+        indexes_list = []
+
+        it = 0
+        for item_aux in input_list:
+            if (item_aux!=-1):
+                indexes_list.append(it)
+            it+=1
+
+        return indexes_list
+
+    def execute_analysis(self, input_dataframe, \
+                                           dir_to_store_analysis, attrs_list):
+        var1 = np.array(input_dataframe[attrs_list[0]])
+
+        var1_ok_idxs = self.__remove_missing_values_idxs__(var1.tolist())
+
+        # This variable stores all the indexes without missing values.
+        ok_idxs = var1_ok_idxs
+
+        output_array = np.array(input_dataframe['output'].tolist()).reshape(1, -1)
+        class0_idxs = list(set(np.where(output_array==0)[1].tolist()).intersection(ok_idxs))
+        class1_idxs = list(set(np.where(output_array==1)[1].tolist()).intersection(ok_idxs))
+
+        fig, ax = plt.subplots()
+
+        plt.ylabel(attrs_list[0])
+        ax.set_xticklabels([])
+
+        plt.title('Dispersion of %s (without missing values)'%\
+                                  (attrs_list[0]))
+        plt.plot([-1, 0, 1], [np.mean(var1[ok_idxs])]*3, 'k--')
+        plt.scatter([0]*len(class0_idxs), var1[class0_idxs], s=10, linewidths=0.7, marker='x')
+        plt.scatter([0]*len(class1_idxs), var1[class1_idxs], s=10, linewidths=0.7, marker='x')
+        plt.legend(['Regression line (mean)', 'Class 0', 'Class 1'])
+        output_filename = '%s/%s'%(dir_to_store_analysis, \
+                'dispersion_analysis_%s.pdf'%(attrs_list[0]))
+        plt.savefig(output_filename)
+
+        print('++++ The dispersion study has been stored at %s'%output_filename)
+
+class Analysis_Dispersion_2D():
 
     def __init__(self):
         pass
@@ -47,14 +93,14 @@ class Analysis_Covariances():
         intercept = regression_obj.intercept_
         regression_func = coefficient*regression_x_values + intercept
 
-        plt.title('Covariance between %s and %s (without missing values)'%\
+        plt.title('Dispersion between %s and %s (without missing values)'%\
                                   (attrs_list[0], attrs_list[1]))
         plt.plot(regression_x_values, regression_func, 'k--')
-        plt.scatter(var1[class0_idxs], var2[class0_idxs])
-        plt.scatter(var1[class1_idxs], var2[class1_idxs])
+        plt.scatter(var1[class0_idxs], var2[class0_idxs], s=10, linewidths=0.7, marker='x')
+        plt.scatter(var1[class1_idxs], var2[class1_idxs], s=10, linewidths=0.7, marker='x')
         plt.legend(['Regression line', 'Class 0', 'Class 1'])
         output_filename = '%s/%s'%(dir_to_store_analysis, \
-                'covariance_analysis_%s_%s.pdf'%(attrs_list[0], attrs_list[1]))
+                'dispersion_analysis_%s_%s.pdf'%(attrs_list[0], attrs_list[1]))
         plt.savefig(output_filename)
 
-        print('++++ The covariance study has been stored at %s'%output_filename)
+        print('++++ The dispersion study has been stored at %s'%output_filename)
