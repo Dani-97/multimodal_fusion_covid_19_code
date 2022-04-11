@@ -14,7 +14,9 @@ class UniversalFactory():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--feature_retrieval", choices=['ReliefF', 'SelectKBest'], \
+    parser.add_argument("--feature_retrieval", \
+        choices=['SequentialSelector', 'VarianceThreshold', 'Fisher', \
+                                                      'MutualInformation'], \
         required=True, help="Name of the algorithm used to make feature selection")
     parser.add_argument("--dataset_path", type=str, \
                               help="Path to the input dataset", required=True)

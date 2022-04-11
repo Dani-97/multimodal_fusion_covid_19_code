@@ -157,7 +157,7 @@ class SVM_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an SVM classifier')
-        self.classifier = svm.SVC(kernel='linear', probability=True, class_weight='balanced')
+        self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced')
 
     # The rest of the functions are inherited from the super class.
 

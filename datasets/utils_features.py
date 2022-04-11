@@ -1,11 +1,14 @@
 import csv
 import numpy as np
-from ReliefF import ReliefF
+from scipy.sparse import *
 from sklearn.decomposition import PCA
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif
+from sklearn.feature_selection import SelectKBest, SequentialFeatureSelector, VarianceThreshold
+from sklearn.feature_selection import mutual_info_classif
+from sklearn.neighbors import KNeighborsClassifier
 import math
 import matplotlib.pyplot as plt
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from skfeature.utility import construct_W
 
 def plot_2D_distribution(input_data, output_data):
     plt.figure()
@@ -77,126 +80,49 @@ class No_Feature_Retrieval(Super_Feature_Retrieval):
     def store_report(self, csv_file_path, attrs_headers, append=True):
         pass
 
-class ReliefF_Feature_Retrieval(Super_Feature_Retrieval):
+class SequentialSelector_Feature_Retrieval(Super_Feature_Retrieval):
 
     def __init__(self, **kwargs):
-        print('++++ The ReliefF algorithm has been chosen for feature selection')
+        print('++++ A Sequential Selector has been chosen for feature selection')
         self.noftopfeatures = kwargs['noftopfeatures']
         print('---- Number of top features: %d'%self.noftopfeatures)
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        super().execute_feature_retrieval(input_data, output_data, plot_data)
-        reliefF_algorithm = ReliefF(n_neighbors=5, n_features_to_keep=self.noftopfeatures)
-        input_data = input_data.astype(np.float64)
-        output_data = output_data.astype(np.float64)
-        output_selection = reliefF_algorithm.fit_transform(input_data[:, :], output_data)
-        self.reliefF_report = reliefF_algorithm.__dict__
+        knn = KNeighborsClassifier()
+        tmp_selected_features = []
+        # Total number of features that are included in the dataset.
+        total_noffeatures = np.shape(input_data)[1]
 
-        return output_selection
+        self.ordered_features_idxs = []
+        self.subsets_scores_list = []
+        self.feature_selector = SFS(knn,
+                                    k_features=np.shape(input_data)[1],
+                                    forward=True,
+                                    floating=False,
+                                    verbose=0,
+                                    scoring='roc_auc',
+                                    cv=0)
 
-    def __give_names_to_features(self, attrs_headers, \
-                                   top_features_list, features_scores_list):
-        top_features_with_names_list = []
+        self.feature_selector.fit(input_data.astype(np.float64), output_data)
 
-        for item_aux in top_features_list:
-            item_with_name_aux = item_aux + ': ' + \
-                      attrs_headers[int(item_aux)] + \
-                        ' (score = %d)'%features_scores_list[int(item_aux)]
-            top_features_with_names_list.append(item_with_name_aux)
+        for noffeatures_aux in range(1, total_noffeatures+1):
+            # This line retrieves the feature that was selected in the current
+            # step of the algorithm.
+            current_selected_feature = list(set(list(self.feature_selector.subsets_[noffeatures_aux]['feature_idx'])) - \
+                     set(tmp_selected_features))
+            tmp_selected_features+=current_selected_feature
+            self.ordered_features_idxs.append(current_selected_feature[0])
+            current_subset_score_aux = self.feature_selector.subsets_[noffeatures_aux]['avg_score']
+            self.subsets_scores_list.append(current_subset_score_aux)
 
-        return top_features_with_names_list
+        noftopfeatures_idxs = self.ordered_features_idxs[0:self.noftopfeatures]
+        transformed_data = input_data[:, noftopfeatures_idxs]
 
-    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
-        if (append):
-            file_mode = 'a'
-        else:
-            file_mode = 'w'
-
-        with open(csv_file_path, file_mode) as csv_file:
-            csv_writer = csv.writer(csv_file, delimiter=',')
-
-            top_features = np.array(self.reliefF_report['top_features']).astype(str)
-            features_scores = np.array(self.reliefF_report['feature_scores']).astype(np.float64)
-            top_features_with_names = \
-                    self.__give_names_to_features(attrs_headers, top_features, features_scores)
-            csv_writer.writerow(['top_features'])
-            csv_writer.writerow(top_features_with_names)
-            csv_writer.writerow([])
-
-    # This function plots the report of the scores and the ranking of the
-    # attributes after the feature selection algorithm is applied.
-    def __plot_report__(self, attrs_headers, dir_to_store_results):
-        top_features_idx = np.flip(np.array(self.reliefF_report['top_features']))
-        features_scores = np.array(self.reliefF_report['feature_scores']).astype(np.float64)
-        features_scores = features_scores[top_features_idx]
-
-        fig, ax = plt.subplots(figsize=(27.5, 10))
-        y_pos = list(range(len(features_scores)))
-        ax.barh(y_pos, features_scores, align='center')
-
-        plt.title('Top features scores ranking')
-        plt.tick_params(labeltop=True, labelright=True)
-        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
-        plt.xlabel('Feature score')
-        plt.ylabel('Feature')
-
-        # It is important to note that x and y are flipped, because we are
-        # using barh.
-        for x_coordinate, y_coordinate in enumerate(features_scores):
-            text_to_show = str(int(y_coordinate))
-            if (y_coordinate<0):
-                displacement = -(len(text_to_show)-50+(y_coordinate))
-            else:
-                displacement = len(text_to_show)
-            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
-
-        output_filename = '%s/%s'%(dir_to_store_results, 'reliefF_report.pdf')
-        plt.savefig(output_filename)
-        print('++++ The report of ReliefF top features ranking has been stored at %s'%output_filename)
-
-    def store_report(self, csv_file_path, attrs_headers, append=True):
-        self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
-        self.__plot_report__(attrs_headers, self.dir_to_store_results)
-
-class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
-
-    def __init__(self, **kwargs):
-        print('++++ SelectKBest object has been created for feature selection')
-        self.noftopfeatures = kwargs['noftopfeatures']
-        print('---- Number of top features: %d'%self.noftopfeatures)
-
-    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        self.selectKBest_obj = SelectKBest(f_classif, k='all')
-        self.selectKBest_obj.fit(input_data, output_data)
-        self.top_features_idxs = self.selectKBest_obj.get_support(True)
-        self.features_scores = self.selectKBest_obj.scores_
-        self.features_scores_with_keys = {}
-
-        for feature_idx_aux in self.top_features_idxs:
-            self.features_scores_with_keys[feature_idx_aux] = \
-                self.features_scores[feature_idx_aux]
-
-        self.top_features_ordered = sorted(self.features_scores_with_keys, \
-                          key=self.features_scores_with_keys.get, reverse=True)
-
-        idxs_for_converted_data = self.top_features_ordered[0:self.noftopfeatures]
-        converted_data = input_data[:, idxs_for_converted_data]
-
-        return converted_data
-
-    def __give_names_to_features(self, attrs_headers, top_features_idxs):
-        attrs_headers_np = np.array(attrs_headers)
-        top_features_with_names = []
-
-        for current_feature_idx_aux in top_features_idxs:
-            top_features_with_names.append(attrs_headers_np[current_feature_idx_aux] + \
-                        ' (score = %.2f)'%(self.features_scores_with_keys[current_feature_idx_aux]))
-
-        return top_features_with_names
+        return transformed_data
 
     def __plot_report__(self, attrs_headers, dir_to_store_results):
-        top_features_idx = self.top_features_ordered
-        features_scores = np.array(self.features_scores).astype(np.float64)
+        top_features_idx = self.ordered_features_idxs
+        features_scores = np.array(self.subsets_scores_list).astype(np.float64)
         features_scores = features_scores[top_features_idx]
 
         fig, ax = plt.subplots(figsize=(27.5, 10))
@@ -219,26 +145,299 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
                 text_to_show = str(int(y_coordinate))
             ax.text(y_coordinate + 0.5, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
-        output_filename = '%s/%s'%(dir_to_store_results, 'ftest_report.pdf')
+        output_filename = '%s/%s'%(dir_to_store_results, 'seq_selector_report.pdf')
         plt.savefig(output_filename)
-        print('++++ The report of SelectKBest top features ranking has been stored at %s'%output_filename)
+        print('++++ The report of the Sequential Selector top features ranking has been stored at %s'%output_filename)
 
     def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
+        report_list = []
         if (append):
             file_mode = 'a'
         else:
             file_mode = 'w'
 
-        top_features_with_names = \
-            self.__give_names_to_features(attrs_headers, \
-                                              self.top_features_ordered)
+        attrs_headers = np.array(attrs_headers)
+        it = 0
+        for feature_idx_aux in self.ordered_features_idxs:
+            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
+                              attrs_headers[feature_idx_aux], self.subsets_scores_list[it])
+            report_list.append(current_line_str_aux)
+            it+=1
 
         with open(csv_file_path, file_mode) as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
 
             csv_writer.writerow(['top_features'])
-            csv_writer.writerow(top_features_with_names)
+            csv_writer.writerow(report_list)
             csv_writer.writerow([])
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        self.__store_report_to_csv__(csv_file_path, attrs_headers)
+        self.__plot_report__(attrs_headers, self.dir_to_store_results)
+
+class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
+
+    def __init__(self, **kwargs):
+        print('++++ The Variance Threshold algorithm has been chosen for feature selection')
+        self.noftopfeatures = kwargs['noftopfeatures']
+        print('---- Number of top features: %d'%self.noftopfeatures)
+
+    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
+        self.feature_selector = VarianceThreshold()
+        self.feature_selector.fit(input_data)
+
+        self.attrs_variances = self.feature_selector.variances_
+        self.ordered_features_idxs = np.flip(np.argsort(self.attrs_variances))
+        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+
+        transformed_data = input_data[:, top_features_idxs]
+
+        return transformed_data
+
+    def __plot_report__(self, attrs_headers, dir_to_store_results):
+        top_features_idx = self.ordered_features_idxs
+        features_scores = np.array(self.attrs_variances).astype(np.float64)
+        features_scores = features_scores[top_features_idx]
+
+        fig, ax = plt.subplots(figsize=(27.5, 10))
+        y_pos = list(range(len(features_scores)))
+        ax.barh(y_pos, features_scores, align='center')
+
+        plt.title('Top features scores ranking')
+        plt.tick_params(labeltop=True, labelright=True)
+        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xlabel('Feature score')
+        plt.ylabel('Feature')
+
+        # It is important to note that x and y are flipped, because we are
+        # using barh.
+        for x_coordinate, y_coordinate in enumerate(features_scores):
+            if (math.isnan(y_coordinate)):
+                y_coordinate = 0
+                text_to_show = 'No variability'
+            else:
+                text_to_show = str(round(float(y_coordinate), 2))
+            ax.text(y_coordinate + 0.5, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+
+        output_filename = '%s/%s'%(dir_to_store_results, 'var_thresh_selector_report.pdf')
+        plt.savefig(output_filename)
+        print('++++ The report of the Variance Threshold Selector top features ranking has been stored at %s'%output_filename)
+
+    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
+        report_list = []
+        if (append):
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        attrs_headers = np.array(attrs_headers)
+        it = 0
+        for feature_idx_aux in self.ordered_features_idxs:
+            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
+                            np.array(attrs_headers)[feature_idx_aux], \
+                                        self.attrs_variances[feature_idx_aux])
+            report_list.append(current_line_str_aux)
+            it+=1
+
+        with open(csv_file_path, file_mode) as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow(['top_features'])
+            csv_writer.writerow(report_list)
+            csv_writer.writerow([])
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
+        self.__plot_report__(attrs_headers, self.dir_to_store_results)
+
+class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
+
+    def __init__(self, **kwargs):
+        print('++++ The Fisher Score algorithm has been chosen for feature selection')
+        self.noftopfeatures = kwargs['noftopfeatures']
+        print('---- Number of top features: %d'%self.noftopfeatures)
+
+    def __compute_fisher_score__(self, input_data, output_data):
+        input_data = np.array(input_data).astype(np.float64)
+        output_data = np.array(output_data).astype(np.float64)
+
+        nofsamples, nofattrs = np.shape(input_data)
+        labels = np.unique(output_data)
+        nofclasses = len(labels)
+        total_mean = np.mean(input_data, axis=0)
+        '''
+        [mean(a1), mean(a2), ... , mean(am)]
+        '''
+        class_num = np.zeros(nofclasses)
+        class_mean = np.zeros((nofclasses, nofattrs))
+        class_std = np.zeros((nofclasses, nofattrs))
+        for i, lab in enumerate(labels):
+            idx_list = np.where(output_data == lab)[0]
+            # print(idx_list[0])
+            class_num[i] = len(idx_list)
+            class_mean[i] = np.mean(input_data[idx_list], axis=0)
+            class_std[i] = np.std(input_data[idx_list], axis=0)
+        '''
+        std(c1_a1), std(c1_a2), ..., std(c1_am)
+        std(c2_a1), std(c2_a2), ..., std(c2_am)
+        std(c3_a1), std(c3_a2), ..., std(c3_am)
+        '''
+        fisher_scores_list = []
+
+        for current_attr_idx_aux in range(nofattrs):
+            Sb_j = 0.0
+            Sw_j = 0.0
+            for current_class_idx_aux in range(nofclasses):
+                Sb_j += class_num[current_class_idx_aux] * \
+                    (class_mean[current_class_idx_aux, current_attr_idx_aux] - \
+                        total_mean[current_attr_idx_aux])** 2
+                Sw_j += class_num[current_class_idx_aux] * \
+                    class_std[current_class_idx_aux, current_attr_idx_aux] ** 2
+                ratio = Sb_j / Sw_j
+
+            fisher_scores_list.append(ratio)
+
+        fisher_idxs_list = np.flip(np.argsort(fisher_scores_list))
+
+        return fisher_scores_list, fisher_idxs_list
+
+    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
+        self.features_scores, self.ordered_features_idxs = \
+            self.__compute_fisher_score__(input_data, output_data)
+
+        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+        transformed_data = input_data[:, top_features_idxs]
+
+        return transformed_data
+
+    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
+        report_list = []
+        if (append):
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        attrs_headers = np.array(attrs_headers)
+        it = 0
+        for feature_idx_aux in self.ordered_features_idxs:
+            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
+                            np.array(attrs_headers)[feature_idx_aux], \
+                                self.features_scores[feature_idx_aux])
+            report_list.append(current_line_str_aux)
+            it+=1
+
+        with open(csv_file_path, file_mode) as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow(['top_features'])
+            csv_writer.writerow(report_list)
+            csv_writer.writerow([])
+
+    # This function plots the report of the scores and the ranking of the
+    # attributes after the feature selection algorithm is applied.
+    def __plot_report__(self, attrs_headers, dir_to_store_results):
+        top_features_idx = np.flip(np.array(self.ordered_features_idxs))
+        features_scores = np.array(self.features_scores).astype(np.float64)
+        features_scores = features_scores[top_features_idx]
+
+        fig, ax = plt.subplots(figsize=(27.5, 10))
+        y_pos = list(range(len(features_scores)))
+        ax.barh(y_pos, features_scores, align='center')
+
+        plt.title('Top features scores ranking')
+        plt.tick_params(labeltop=True, labelright=True)
+        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xlabel('Feature score')
+        plt.ylabel('Feature')
+
+        # It is important to note that x and y are flipped, because we are
+        # using barh.
+        for x_coordinate, y_coordinate in enumerate(features_scores):
+            text_to_show = str(int(y_coordinate))
+            if (y_coordinate<0):
+                displacement = -(len(text_to_show)-50+(y_coordinate))
+            else:
+                displacement = len(text_to_show)
+            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+
+        output_filename = '%s/%s'%(dir_to_store_results, 'fisher_report.pdf')
+        plt.savefig(output_filename)
+        print('++++ The report of Fisher score top features ranking has been stored at %s'%output_filename)
+
+    def store_report(self, csv_file_path, attrs_headers, append=True):
+        self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
+        self.__plot_report__(attrs_headers, self.dir_to_store_results)
+
+class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
+
+    def __init__(self, **kwargs):
+        print('++++ The Mutual Information algorithm has been chosen for feature selection')
+        self.noftopfeatures = kwargs['noftopfeatures']
+        print('---- Number of top features: %d'%self.noftopfeatures)
+
+    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
+        self.features_scores = mutual_info_classif(input_data, output_data, random_state=5)
+
+        self.ordered_features_idxs = np.flip(np.argsort(self.features_scores))
+        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+
+        transformed_data = input_data[:, top_features_idxs]
+
+        return transformed_data
+
+    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
+        report_list = []
+        if (append):
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        attrs_headers = np.array(attrs_headers)
+        it = 0
+        for feature_idx_aux in self.ordered_features_idxs:
+            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
+                            np.array(attrs_headers)[feature_idx_aux], \
+                                self.features_scores[feature_idx_aux])
+            report_list.append(current_line_str_aux)
+            it+=1
+
+        with open(csv_file_path, file_mode) as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow(['top_features'])
+            csv_writer.writerow(report_list)
+            csv_writer.writerow([])
+
+    # This function plots the report of the scores and the ranking of the
+    # attributes after the feature selection algorithm is applied.
+    def __plot_report__(self, attrs_headers, dir_to_store_results):
+        top_features_idx = np.flip(np.array(self.ordered_features_idxs))
+        features_scores = np.array(self.features_scores).astype(np.float64)
+        features_scores = features_scores[top_features_idx]
+
+        fig, ax = plt.subplots(figsize=(27.5, 10))
+        y_pos = list(range(len(features_scores)))
+        ax.barh(y_pos, features_scores, align='center')
+
+        plt.title('Top features scores ranking')
+        plt.tick_params(labeltop=True, labelright=True)
+        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xlabel('Feature score')
+        plt.ylabel('Feature')
+
+        # It is important to note that x and y are flipped, because we are
+        # using barh.
+        for x_coordinate, y_coordinate in enumerate(features_scores):
+            text_to_show = str(int(y_coordinate))
+            if (y_coordinate<0):
+                displacement = -(len(text_to_show)-50+(y_coordinate))
+            else:
+                displacement = len(text_to_show)
+            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+
+        output_filename = '%s/%s'%(dir_to_store_results, 'mutual_info_report.pdf')
+        plt.savefig(output_filename)
+        print('++++ The report of Mutual Information score top features ranking has been stored at %s'%output_filename)
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
         self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
@@ -247,7 +446,7 @@ class SelectKBest_Feature_Retrieval(Super_Feature_Retrieval):
 class PCA_Feature_Retrieval(Super_Feature_Retrieval):
 
     def __init__(self, **kwargs):
-        print('++++ The PCA algorithm has ben chosen for feature selection')
+        print('++++ The PCA algorithm has been chosen for feature selection')
         self.nofcomponents = kwargs['nofcomponents']
         print('---- Number of components: %d'%self.nofcomponents)
 
