@@ -197,15 +197,20 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
     def __plot_report__(self, attrs_headers, dir_to_store_results):
         top_features_idx = self.ordered_features_idxs
         features_scores = np.array(self.attrs_variances).astype(np.float64)
-        features_scores = features_scores[top_features_idx]
+        features_scores = np.flip(features_scores[top_features_idx])
 
-        fig, ax = plt.subplots(figsize=(27.5, 10))
+        plt.rcParams['font.size'] = '30'
+        fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
-        ax.barh(y_pos, features_scores, align='center')
+
+        my_cmap = plt.get_cmap("Purples")
+        rescale = lambda y: (y - np.min(y)) / (np.max(y) - np.min(y))
+        ax.barh(y_pos, features_scores, edgecolor='black', \
+                                 align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.tick_params(labeltop=True, labelright=True)
-        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.yticks(np.flip(y_pos), np.array(attrs_headers)[top_features_idx])
+        plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
 
@@ -216,10 +221,13 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
                 y_coordinate = 0
                 text_to_show = 'No variability'
             else:
-                text_to_show = str(round(float(y_coordinate), 2))
-            ax.text(y_coordinate + 0.5, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+                text_to_show = '%.2E'%(float(y_coordinate))
+            ax.text(y_coordinate, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
+        plt.xlim([10**(-3), 10**(6)])
+        plt.subplots_adjust(left=0.25, bottom=0.05, right=0.96, top=0.97)
         output_filename = '%s/%s'%(dir_to_store_results, 'var_thresh_selector_report.pdf')
+        plt.yticks(rotation=30)
         plt.savefig(output_filename)
         print('++++ The report of the Variance Threshold Selector top features ranking has been stored at %s'%output_filename)
 
@@ -340,27 +348,30 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
         features_scores = np.array(self.features_scores).astype(np.float64)
         features_scores = features_scores[top_features_idx]
 
-        fig, ax = plt.subplots(figsize=(27.5, 10))
+        plt.rcParams['font.size'] = '30'
+        fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
-        ax.barh(y_pos, features_scores, align='center')
+
+        my_cmap = plt.get_cmap("Purples")
+        rescale = lambda y: (y - np.min(y)) / (np.max(y) - np.min(y))
+        ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.tick_params(labeltop=True, labelright=True)
         plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
 
         # It is important to note that x and y are flipped, because we are
         # using barh.
         for x_coordinate, y_coordinate in enumerate(features_scores):
-            text_to_show = str(int(y_coordinate))
-            if (y_coordinate<0):
-                displacement = -(len(text_to_show)-50+(y_coordinate))
-            else:
-                displacement = len(text_to_show)
-            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+            text_to_show = '%.2E'%float(y_coordinate)
+            ax.text(y_coordinate, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
+        plt.xlim([10**(-5), 10**(0)])
+        plt.subplots_adjust(left=0.25, bottom=0.05, right=0.96, top=0.97)
         output_filename = '%s/%s'%(dir_to_store_results, 'fisher_report.pdf')
+        plt.yticks(rotation=30)
         plt.savefig(output_filename)
         print('++++ The report of Fisher score top features ranking has been stored at %s'%output_filename)
 
@@ -415,26 +426,31 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
         features_scores = np.array(self.features_scores).astype(np.float64)
         features_scores = features_scores[top_features_idx]
 
-        fig, ax = plt.subplots(figsize=(27.5, 10))
+        plt.rcParams['font.size'] = '30'
+        fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
-        ax.barh(y_pos, features_scores, align='center')
+
+        my_cmap = plt.get_cmap("Purples")
+        rescale = lambda y: (y - np.min(y)) / (np.max(y) - np.min(y))
+        ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.tick_params(labeltop=True, labelright=True)
         plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
 
         # It is important to note that x and y are flipped, because we are
         # using barh.
         for x_coordinate, y_coordinate in enumerate(features_scores):
-            text_to_show = str(int(y_coordinate))
-            if (y_coordinate<0):
-                displacement = -(len(text_to_show)-50+(y_coordinate))
-            else:
-                displacement = len(text_to_show)
-            ax.text(y_coordinate + displacement, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
+            text_to_show = '%.2E'%float(y_coordinate)
+            if (y_coordinate<(10**(-4))):
+                y_coordinate = 10**(-4)
+            ax.text(y_coordinate, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
+        plt.yticks(rotation=30)
+        plt.xlim([10**(-4), 10**(0)])
+        plt.subplots_adjust(left=0.25, bottom=0.05, right=0.96, top=0.97)
         output_filename = '%s/%s'%(dir_to_store_results, 'mutual_info_report.pdf')
         plt.savefig(output_filename)
         print('++++ The report of Mutual Information score top features ranking has been stored at %s'%output_filename)
