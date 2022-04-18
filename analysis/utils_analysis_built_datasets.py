@@ -269,3 +269,17 @@ class Analysis_Hospitalized_And_Urgencies(Super_Class_Analysis):
         super().__execute_analysis_aux__(attrs_list, input_dataframe, \
                         name_classes, conditions_list, possible_output_values, \
                                       attrs_possible_values_hr, dir_to_store_analysis)
+
+class Analysis_Hospitalized_And_Urgencies_Numerical_Variables(Super_Class_Analysis):
+
+    def __init__(self):
+        pass
+
+    def execute_analysis(self, input_dataframe, dir_to_store_analysis):
+        attrs_list = ['edad', 'talla_cm', 'peso_kg', 'imc', \
+                         'linfocitos', 'linfocitos_porcentaje', 'dimeros_d', \
+                             'ldh', 'creatinina', 'filtrado_glomerular_estimado', \
+                                 'prc', 'ferritina', 'il6']
+
+        super().__perform_numerical_attrs_analysis__(attrs_list, \
+                                    input_dataframe, dir_to_store_analysis)

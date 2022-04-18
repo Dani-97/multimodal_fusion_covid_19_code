@@ -1,3 +1,4 @@
+import configparser
 import csv
 import numpy as np
 from scipy.sparse import *
@@ -8,6 +9,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import math
 import matplotlib.pyplot as plt
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+import os
 from skfeature.utility import construct_W
 
 def plot_2D_distribution(input_data, output_data):
@@ -61,6 +63,14 @@ class Super_Feature_Retrieval():
 
     def set_attributes_types(self, attrs_types):
         self.attrs_types = attrs_types
+
+    def translate_fields(self, attrs_headers, config):
+        translated_attrs_headers = []
+
+        for attr_header_aux in attrs_headers:
+            translated_attrs_headers.append(config['TRANSLATIONS'][attr_header_aux])
+
+        return translated_attrs_headers
 
 # An object of this class will be instantiated if no feature selection was
 # chosen.
@@ -199,6 +209,10 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
         features_scores = np.array(self.attrs_variances).astype(np.float64)
         features_scores = np.flip(features_scores[top_features_idx])
 
+        config = configparser.ConfigParser()
+        config.read('./datasets/translations.cfg')
+        translated_attrs_headers = super().translate_fields(attrs_headers, config)
+
         plt.rcParams['font.size'] = '30'
         fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
@@ -209,7 +223,8 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
                                  align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.yticks(np.flip(y_pos), np.array(attrs_headers)[top_features_idx])
+        plt.yticks(np.flip(y_pos), \
+                        np.array(translated_attrs_headers)[top_features_idx])
         plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
@@ -348,6 +363,10 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
         features_scores = np.array(self.features_scores).astype(np.float64)
         features_scores = features_scores[top_features_idx]
 
+        config = configparser.ConfigParser()
+        config.read('./datasets/translations.cfg')
+        translated_attrs_headers = super().translate_fields(attrs_headers, config)
+
         plt.rcParams['font.size'] = '30'
         fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
@@ -357,7 +376,7 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
         ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.yticks(y_pos, np.array(translated_attrs_headers)[top_features_idx])
         plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
@@ -426,6 +445,10 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
         features_scores = np.array(self.features_scores).astype(np.float64)
         features_scores = features_scores[top_features_idx]
 
+        config = configparser.ConfigParser()
+        config.read('./datasets/translations.cfg')
+        translated_attrs_headers = super().translate_fields(attrs_headers, config)
+
         plt.rcParams['font.size'] = '30'
         fig, ax = plt.subplots(figsize=(30, 30))
         y_pos = list(range(len(features_scores)))
@@ -435,7 +458,7 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
         ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
         plt.title('Top features scores ranking')
-        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
+        plt.yticks(y_pos, np.array(translated_attrs_headers)[top_features_idx])
         plt.xscale('log')
         plt.xlabel('Feature score')
         plt.ylabel('Feature')
