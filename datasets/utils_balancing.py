@@ -1,3 +1,4 @@
+from imblearn.over_sampling import SMOTE, ADASYN
 import numpy as np
 
 class No_Balancing():
@@ -110,3 +111,47 @@ class Undersampling_Balancing():
         print('')
 
         return undersampled_input_data, undersampled_output_data
+
+class SMOTE_Balancing():
+
+    def __init__(self):
+        pass
+
+    def execute_balancing(self, input_data, output_data):
+        print('**** The training subset is being oversampled with SMOTE...')
+
+        oversampling_obj = SMOTE()
+        transformed_data = oversampling_obj.fit_resample(input_data, output_data)
+        transformed_input_data, transformed_output_data = transformed_data
+
+        print('')
+        print('**** INFO: With the oversampling of SMOTE:')
+        print('Class 0 -> %d samples; Class 1 -> %d samples'\
+                        %(np.sum(transformed_output_data=='0'), \
+                            np.sum(transformed_output_data=='1')))
+        print('')
+
+
+        return transformed_input_data, transformed_output_data
+
+class ADASYN_Balancing():
+
+    def __init__(self):
+        pass
+
+    def execute_balancing(self, input_data, output_data):
+        print('**** The training subset is being oversampled with ADASYN...')
+
+        oversampling_obj = ADASYN()
+        transformed_data = oversampling_obj.fit_resample(input_data, output_data)
+        transformed_input_data, transformed_output_data = transformed_data
+
+        print('')
+        print('**** INFO: With the oversampling of ADASYN:')
+        print('Class 0 -> %d samples; Class 1 -> %d samples'\
+                        %(np.sum(transformed_output_data=='0'), \
+                            np.sum(transformed_output_data=='1')))
+        print('')
+
+
+        return transformed_input_data, transformed_output_data

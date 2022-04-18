@@ -82,11 +82,15 @@ class Super_Class_Analysis():
             current_values = current_values[np.where(current_values!=-1)]
             mean_value = np.mean(current_values)
             std_value = np.std(current_values)
+
             median_value = np.median(current_values)
+            qr1 = np.percentile(current_values, 25)
+            qr3 = np.percentile(current_values, 75)
+
             min_value = np.min(current_values)
             max_value = np.max(current_values)
-            print('| %s | %.2f | %.2f | %d | %.2f | %.2f |'%\
-                (attr_aux, mean_value, std_value, median_value, \
+            print('| %s | %.2f | %.2f | %.2f (IQR: %.2f - %.2f) | %.2f | %.2f |'%\
+                (attr_aux, mean_value, std_value, median_value, qr1, qr3, \
                     min_value, max_value))
 
         sys.stdout.close()

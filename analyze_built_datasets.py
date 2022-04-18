@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--built_dataset', type=str, required=True, \
                             choices=['Only_Hospitalized', 'Only_Hospitalized_Joint_Inmunosupression', \
                             'Hospitalized_And_Urgencies', 'Only_Hospitalized_Discretized_Clinical_Data', \
-                            'Only_Hospitalized_Numerical_Variables'], \
+                            'Only_Hospitalized_Numerical_Variables', 'Hospitalized_And_Urgencies_Numerical_Variables'], \
                             help='Descriptive name of the dataset as is used in this project')
     parser.add_argument('--dir_to_store_analysis', type=str, required=True, \
                             help='Directory where the analysis files will be stored')

@@ -29,7 +29,7 @@ def main():
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
                             choices=['No', 'Standardization', 'Normalization'], required=True)
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
-                                              choices=['No', 'Oversampling', 'Undersampling'])
+                                              choices=['No', 'Oversampling', 'Undersampling', 'SMOTE', 'ADASYN'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
                                               choices=['No', 'PCA', 'SequentialSelector', 'VarianceThreshold', 'Fisher', 'MutualInformation'])
     parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
