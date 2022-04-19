@@ -153,6 +153,19 @@ class Super_Class_Analysis():
 
         print('')
 
+    def __obtain_attr_box_plot__(self, attrs_list, input_dataframe, \
+                                                        dir_to_store_analysis):
+        for attr_aux in attrs_list:
+            attr_aux_values = input_dataframe.query(attr_aux + '!=-1')[attr_aux]
+
+            fig, ax = plt.subplots()
+            plt.title('Boxplot of %s'%attr_aux)
+            ax.boxplot(attr_aux_values)
+            output_filename = '%s/boxplot_%s.pdf'%(dir_to_store_analysis, \
+                                                                      attr_aux)
+            plt.xticks([])
+            plt.savefig(output_filename)
+
     def __execute_analysis_aux__(self, attrs_list, input_dataframe, \
                     name_classes, conditions_list, possible_output_values, \
                                   attrs_possible_values_hr, dir_to_store_analysis):
@@ -206,6 +219,8 @@ class Analysis_Only_Hospitalized_Numerical_Variables(Super_Class_Analysis):
                              'ldh', 'creatinina', 'filtrado_glomerular_estimado', \
                                  'prc', 'ferritina', 'il6']
 
+        super().__obtain_attr_box_plot__(attrs_list, input_dataframe, \
+                                    dir_to_store_analysis)
         super().__perform_numerical_attrs_analysis__(attrs_list, \
                                     input_dataframe, dir_to_store_analysis)
 
@@ -285,5 +300,7 @@ class Analysis_Hospitalized_And_Urgencies_Numerical_Variables(Super_Class_Analys
                              'ldh', 'creatinina', 'filtrado_glomerular_estimado', \
                                  'prc', 'ferritina', 'il6']
 
+        super().__obtain_attr_box_plot__(attrs_list, input_dataframe, \
+                                    dir_to_store_analysis)
         super().__perform_numerical_attrs_analysis__(attrs_list, \
                                     input_dataframe, dir_to_store_analysis)
