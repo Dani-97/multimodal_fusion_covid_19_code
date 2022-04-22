@@ -72,6 +72,24 @@ class Super_Feature_Retrieval():
 
         return translated_attrs_headers
 
+    # PRECONDITION: this function assumess that scores_list and attrs_names_list
+    # are in the same order.
+    def __remove_features_without_score__(self, scores_list, attrs_names_list):
+        # This function allows to display the attributes without score as
+        # empty strings.
+        filtered_features_list = []
+
+        it = 0
+        for score_value_aux in scores_list:
+            if (score_value_aux>0):
+                filtered_features_list.append(attrs_names_list[it])
+            else:
+                filtered_features_list.append('')
+            it+=1
+
+        return filtered_features_list
+
+
 # An object of this class will be instantiated if no feature selection was
 # chosen.
 class No_Feature_Retrieval(Super_Feature_Retrieval):
@@ -89,101 +107,6 @@ class No_Feature_Retrieval(Super_Feature_Retrieval):
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
         pass
-
-class SequentialSelector_Feature_Retrieval(Super_Feature_Retrieval):
-
-    def __init__(self, **kwargs):
-        print('++++ A Sequential Selector has been chosen for feature selection')
-        self.noftopfeatures = kwargs['noftopfeatures']
-        print('---- Number of top features: %d'%self.noftopfeatures)
-
-    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        knn = KNeighborsClassifier()
-        tmp_selected_features = []
-        # Total number of features that are included in the dataset.
-        total_noffeatures = np.shape(input_data)[1]
-
-        self.ordered_features_idxs = []
-        self.subsets_scores_list = []
-        self.feature_selector = SFS(knn,
-                                    k_features=np.shape(input_data)[1],
-                                    forward=True,
-                                    floating=False,
-                                    verbose=0,
-                                    scoring='roc_auc',
-                                    cv=0)
-
-        self.feature_selector.fit(input_data.astype(np.float64), output_data)
-
-        for noffeatures_aux in range(1, total_noffeatures+1):
-            # This line retrieves the feature that was selected in the current
-            # step of the algorithm.
-            current_selected_feature = list(set(list(self.feature_selector.subsets_[noffeatures_aux]['feature_idx'])) - \
-                     set(tmp_selected_features))
-            tmp_selected_features+=current_selected_feature
-            self.ordered_features_idxs.append(current_selected_feature[0])
-            current_subset_score_aux = self.feature_selector.subsets_[noffeatures_aux]['avg_score']
-            self.subsets_scores_list.append(current_subset_score_aux)
-
-        noftopfeatures_idxs = self.ordered_features_idxs[0:self.noftopfeatures]
-        transformed_data = input_data[:, noftopfeatures_idxs]
-
-        return transformed_data
-
-    def __plot_report__(self, attrs_headers, dir_to_store_results):
-        top_features_idx = self.ordered_features_idxs
-        features_scores = np.array(self.subsets_scores_list).astype(np.float64)
-        features_scores = features_scores[top_features_idx]
-
-        fig, ax = plt.subplots(figsize=(30, 30))
-        y_pos = list(range(len(features_scores)))
-        ax.barh(y_pos, features_scores, align='center')
-
-        plt.title('Top features scores ranking')
-        plt.tick_params(labeltop=True, labelright=True)
-        plt.yticks(y_pos, np.array(attrs_headers)[top_features_idx])
-        # plt.xlabel('Feature score')
-        plt.ylabel('Feature')
-
-        # It is important to note that x and y are flipped, because we are
-        # using barh.
-        for x_coordinate, y_coordinate in enumerate(features_scores):
-            if (math.isnan(y_coordinate)):
-                y_coordinate = 0
-                text_to_show = 'No variability'
-            else:
-                text_to_show = str(int(y_coordinate))
-            ax.text(y_coordinate + 0.5, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
-
-        output_filename = '%s/%s'%(dir_to_store_results, 'seq_selector_report.pdf')
-        plt.savefig(output_filename)
-        print('++++ The report of the Sequential Selector top features ranking has been stored at %s'%output_filename)
-
-    def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
-        report_list = []
-        if (append):
-            file_mode = 'a'
-        else:
-            file_mode = 'w'
-
-        attrs_headers = np.array(attrs_headers)
-        it = 0
-        for feature_idx_aux in self.ordered_features_idxs:
-            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
-                              attrs_headers[feature_idx_aux], self.subsets_scores_list[it])
-            report_list.append(current_line_str_aux)
-            it+=1
-
-        with open(csv_file_path, file_mode) as csv_file:
-            csv_writer = csv.writer(csv_file, delimiter=',')
-
-            csv_writer.writerow(['top_features'])
-            csv_writer.writerow(report_list)
-            csv_writer.writerow([])
-
-    def store_report(self, csv_file_path, attrs_headers, append=True):
-        self.__store_report_to_csv__(csv_file_path, attrs_headers)
-        self.__plot_report__(attrs_headers, self.dir_to_store_results)
 
 class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
 
@@ -224,9 +147,12 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
         ax.barh(y_pos, features_scores, edgecolor='black', \
                                  align='center', color=my_cmap(rescale(y_pos)))
 
-        # plt.title('Top features scores ranking')
-        plt.yticks(np.flip(y_pos), \
+        attrs_headers_to_disp = \
+            super().__remove_features_without_score__(features_scores, \
                         np.array(translated_attrs_headers)[top_features_idx])
+
+        # plt.title('Top features scores ranking')
+        plt.yticks(np.flip(y_pos), np.array(attrs_headers_to_disp))
         plt.xscale('log')
         # plt.xlabel('Feature score')
         # plt.ylabel('Feature')
@@ -383,8 +309,12 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
         rescale = lambda y: (y - np.min(y)) / (np.max(y) - np.min(y))
         ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
+        attrs_headers_to_disp = \
+            super().__remove_features_without_score__(features_scores, \
+                        np.array(translated_attrs_headers)[top_features_idx])
+
         # plt.title('Top features scores ranking')
-        plt.yticks(y_pos, np.array(translated_attrs_headers)[top_features_idx])
+        plt.yticks(np.flip(y_pos), np.array(attrs_headers_to_disp))
         plt.xscale('log')
         # plt.xlabel('Feature score')
         # plt.ylabel('Feature')
@@ -471,8 +401,12 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
         ax.tick_params(labelbottom=False,labeltop=True)
         ax.barh(y_pos, features_scores, edgecolor='black', align='center', color=my_cmap(rescale(y_pos)))
 
+        attrs_headers_to_disp = \
+            super().__remove_features_without_score__(features_scores, \
+                        np.array(translated_attrs_headers)[top_features_idx])
+
         # plt.title('Top features scores ranking')
-        plt.yticks(y_pos, np.array(translated_attrs_headers)[top_features_idx])
+        plt.yticks(y_pos, np.array(attrs_headers_to_disp))
         plt.xscale('log')
         # plt.xlabel('Feature score')
         # plt.ylabel('Feature')
