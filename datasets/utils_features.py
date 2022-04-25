@@ -314,7 +314,7 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
                         np.array(translated_attrs_headers)[top_features_idx])
 
         # plt.title('Top features scores ranking')
-        plt.yticks(np.flip(y_pos), np.array(attrs_headers_to_disp))
+        plt.yticks(np.flip(y_pos), np.flip(np.array(attrs_headers_to_disp)))
         plt.xscale('log')
         # plt.xlabel('Feature score')
         # plt.ylabel('Feature')

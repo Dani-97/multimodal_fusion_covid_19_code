@@ -5,10 +5,10 @@ os.chdir('../')
 
 noffeatures_list = list(range(1, 29))
 nofexperiments = len(noffeatures_list)
-logs_dir_path_list = ['../results/hospitalized_and_urgencies/']*nofexperiments
+logs_dir_path_list = ['../results/experiment_I/']*nofexperiments
 logs_file_name_list = ['dt_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
 model_list = ['DT_Classifier']*nofexperiments
-dataset_path_list = ['../built_dataset/hospitalized_and_urgencies.csv']*nofexperiments
+dataset_path_list = ['../built_dataset/experiment_I.csv']*nofexperiments
 balancing_list = ['Oversampling']*nofexperiments
 feature_retrieval_list = ['MutualInformation']*nofexperiments
 splitting_list = ['Holdout']*nofexperiments
