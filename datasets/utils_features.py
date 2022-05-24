@@ -8,6 +8,7 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.neighbors import KNeighborsClassifier
 import math
 import matplotlib.pyplot as plt
+import matplotlib.ticker as plticker
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 import os
 from skfeature.utility import construct_W
@@ -171,7 +172,7 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
         #         text_to_show = '%.2E'%(float(y_coordinate))
         #     ax.text(y_coordinate, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
 
-        plt.xlim([10**(-3), 10**(6)])
+        plt.xlim([10**(-5), 10**(6)])
         plt.subplots_adjust(left=0.25, bottom=0.05, right=0.70, top=0.97)
         output_filename = '%s/%s'%(dir_to_store_results, 'var_thresh_selector_report.pdf')
         # plt.yticks(rotation=30)
@@ -327,8 +328,8 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
             ax.text(y_coordinate, x_coordinate - 0.25, text_to_show, color='black', fontweight='bold')
         '''
 
-        plt.xlim([10**(-5), 10**(0)])
-        plt.subplots_adjust(left=0.25, bottom=0.05, right=0.60, top=0.97)
+        plt.xlim([10**(-5), 10**(6)])
+        plt.subplots_adjust(left=0.25, bottom=0.05, right=0.70, top=0.97)
         output_filename = '%s/%s'%(dir_to_store_results, 'fisher_report.pdf')
         # plt.yticks(rotation=30)
         plt.savefig(output_filename)
@@ -422,8 +423,12 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
         '''
 
         # plt.yticks(rotation=30)
-        plt.xlim([10**(-4), 10**(0)])
+        xlim_left, xlim_right = 10**(-5), 10**(6)
+        plt.xlim([xlim_left, xlim_right])
         plt.subplots_adjust(left=0.25, bottom=0.05, right=0.70, top=0.97)
+        # loc = plticker.MultipleLocator(base=10000.0)
+        # ax.xaxis.set_major_locator(loc)
+
         output_filename = '%s/%s'%(dir_to_store_results, 'mutual_info_report.pdf')
         plt.savefig(output_filename)
         print('++++ The report of Mutual Information score top features ranking has been stored at %s'%output_filename)
