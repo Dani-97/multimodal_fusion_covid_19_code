@@ -5,7 +5,7 @@ import pickle
 from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, auc
 from xgboost import XGBClassifier
 
 # This is the parent of every classifier models that are going to be
@@ -53,6 +53,13 @@ class Super_Classifier_Class():
         metrics_values['confusion_matrix'] = cm
 
         return metrics_values
+
+    def save_roc_curve(self, target, predicted, output_filename):
+        fpr, tpr, _ = roc_curve(target, predicted[1][:, 1])
+        roc_auc_value = auc(fpr, tpr)
+
+        np.save(output_filename, (fpr, tpr))
+
 
     # This function adds the headers to the logs csv file.
     def add_headers_to_csv_file(self, output_filename, \

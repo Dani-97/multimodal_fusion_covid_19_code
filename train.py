@@ -7,6 +7,7 @@ from datasets.utils_features import *
 from datasets.utils_normalization import *
 import numpy as np
 import os
+from pathlib import Path
 from utils import convert_metrics_dict_to_list, clear_csv_file
 
 class UniversalFactory():
@@ -36,7 +37,7 @@ def main():
                                               action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
                                               choices=['Holdout', 'Cross_Validation'], required=True)
-    parser.add_argument("--noftopfeatures", help="Number of top features to select in the case of using SelectKBest feature selection algorithm", type=int)
+    parser.add_argument("--noftopfeatures", help="Number of top features to select from the ranking that was obtained with the feature selection algorithm", type=int)
     parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
     parser.add_argument('--nofsplits', help="Number of different holdouts to be performed or number of folds of the cross validation", type=int, required=True)
     parser.add_argument("--n_neighbors", help="Number of neighbors in case of training a kNN classifier", type=int)
@@ -127,6 +128,12 @@ def main():
         # The function returns the predicted values.
         model_output_pred = model.test(input_test_subset)
         metrics_values = model.model_metrics(model_output_pred, output_test_subset)
+
+        roc_curve_filename = args.model + '_' + str(args.noftopfeatures) + '_' + \
+                           args.feature_retrieval + '_' + args.balancing + 'roc_curve'
+        roc_curve_file_full_path = \
+            '%s/%s'%(str(Path(args.logs_file_path).parent), roc_curve_filename)
+        model.save_roc_curve(output_test_subset, model_output_pred, roc_curve_file_full_path)
         headers_list, metrics_values_list = convert_metrics_dict_to_list(metrics_values)
         if (it==0):
             model.add_headers_to_csv_file(args.logs_file_path, headers_list)
