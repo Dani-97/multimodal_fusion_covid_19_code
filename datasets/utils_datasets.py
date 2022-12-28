@@ -80,15 +80,22 @@ class Holdout_Split(Super_Splitting_Class):
 
     def __init__(self, **kwargs):
         self.test_size = float(kwargs['test_size'])
+        self.seed = kwargs['seed']
         print('++++ The dataset will be splitted in a Holdout fashion')
         print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
+        
+        if (self.seed!=None):
+            print('++++ The datset will be splitted considering the manual seed %d.'%self.seed)
+        else:
+            print('++++ No seed was chosen for the random splitting of the dataset.')
 
     # The method set_partition will not do anything for this splitting method.
 
     # input_data variable refers to the data that will be used as input of
     # the classifier and output refers to the labels.
     def split(self, input_data, output_data):
-        splitting_subsets = train_test_split(input_data, output_data, test_size=self.test_size)
+        splitting_subsets = train_test_split(input_data, output_data, \
+                                   test_size=self.test_size, shuffle=True, random_state=self.seed)
 
         return splitting_subsets
 
@@ -98,9 +105,15 @@ class Cross_Validation_Split(Super_Splitting_Class):
 
     def __init__(self, **kwargs):
         self.noffolds = int(kwargs['noffolds'])
+        self.seed = kwargs['seed']
         print('++++ The dataset will be splitted in a Cross Validation fashion with %d folds'%\
                 self.noffolds)
-        self.splitting_module = KFold(n_splits=self.noffolds)
+        if (self.seed!=None):
+            print('++++ The datset will be splitted considering the manual seed %d.'%self.seed)
+        else:
+            print('++++ No seed was chosen for the random splitting of the dataset.')
+
+        self.splitting_module = KFold(n_splits=self.noffolds, shuffle=True, random_state=self.seed)
         self.partitions = None
 
     def set_partition(self, nofpartition):

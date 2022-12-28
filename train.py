@@ -29,6 +29,8 @@ def main():
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
                             choices=['No', 'Standardization', 'Normalization'], required=True)
+    parser.add_argument("--manual_seed", type=int, \
+                            help="If specified, the dataset splitting will be done considering this seed.")
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling', 'SMOTE', 'ADASYN'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
@@ -62,7 +64,7 @@ def main():
     universal_factory = UniversalFactory()
 
     # Creating the splitting object with the universal factory.
-    kwargs = {'test_size': args.test_size, 'noffolds': args.nofsplits}
+    kwargs = {'test_size': args.test_size, 'noffolds': args.nofsplits, 'seed': args.manual_seed}
     splitting = universal_factory.create_object(globals(), args.splitting + '_Split', kwargs)
     # Retrieving the feature selection method with the universal factory.
     kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
@@ -129,10 +131,16 @@ def main():
         model_output_pred = model.test(input_test_subset)
         metrics_values = model.model_metrics(model_output_pred, output_test_subset)
 
+        model_filename = args.model + '_' + str(args.noftopfeatures) + '_' + \
+                           args.feature_retrieval + '_' + args.balancing + '_model'
+        model_file_full_path = \
+            '%s/%s.pkl'%(str(Path(args.logs_file_path).parent), model_filename)
+        model.save_model(model_file_full_path)
+
         roc_curve_filename = args.model + '_' + str(args.noftopfeatures) + '_' + \
-                           args.feature_retrieval + '_' + args.balancing + 'roc_curve'
+                           args.feature_retrieval + '_' + args.balancing + '_roc_curve'
         roc_curve_file_full_path = \
-            '%s/%s'%(str(Path(args.logs_file_path).parent), roc_curve_filename)
+            '%s/%s.npy'%(str(Path(args.logs_file_path).parent), roc_curve_filename)
         model.save_roc_curve(output_test_subset, model_output_pred, roc_curve_file_full_path)
         headers_list, metrics_values_list = convert_metrics_dict_to_list(metrics_values)
         if (it==0):

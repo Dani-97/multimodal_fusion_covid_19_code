@@ -60,7 +60,6 @@ class Super_Classifier_Class():
 
         np.save(output_filename, (fpr, tpr))
 
-
     # This function adds the headers to the logs csv file.
     def add_headers_to_csv_file(self, output_filename, \
                                                 headers_list, append=True):
@@ -149,6 +148,7 @@ class Super_Classifier_Class():
                          auc_roc_summary[it]])
 
     def save_model(self, filename):
+        print('DEBUGGING: save_model -> ', filename)
         pickle.dump(self.classifier, open(filename, 'wb'))
 
     def load_model(self, filename):
