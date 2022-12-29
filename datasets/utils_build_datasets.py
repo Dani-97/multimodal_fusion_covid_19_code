@@ -8,7 +8,9 @@ import pandas as pd
 import pickle
 from utils import read_csv_file, read_headers_file
 from utils import write_csv_file, convert_si_no_to_int
-from deep_features.utils_architectures import *
+from imaging_features.utils_deep_features import *
+from imaging_features.utils_radiomics_features import *
+from imaging_features.utils_images import read_image
 
 class UniversalFactory():
 
@@ -67,7 +69,7 @@ class Super_Class_Build_Dataset():
 
         headers_dict_file = open(headers_file, 'r')
         headers_renaming_dict = eval(headers_dict_file.read())
-        self.original_dataset_df = self.original_dataset_df.rename(columns=headers_renaming_dict)
+        self.original_dataset_df.columns=headers_renaming_dict
 
         self.df_columns_in_order = self.original_dataset_df.columns[self.attrs_order_idxs]
         self.df_numerical_attrs_headers = self.original_dataset_df.columns[self.numerical_attrs_idxs]
@@ -94,6 +96,30 @@ class Super_Class_Build_Dataset():
         self.__preprocess_discrete_attrs__()
 
         return self.df_unique_values
+
+    def __get_images_features__(self, chosen_model_str, associations_file, \
+                                    input_dir_root_path, masks_dir_root_path, \
+                                        selected_approach_obj, device):
+        associations_df = pd.read_csv(associations_file, sep=';')
+
+        features_list = []
+        for image_name in associations_df['Imagen'].values:
+            input_image_full_path = '%s/%s'%(input_dir_root_path, image_name)
+            mask_image_full_path = '%s/%s'%(masks_dir_root_path, image_name.replace('.png', '_mask.png'))
+            if (os.path.exists(input_image_full_path)):
+                input_image = read_image(input_image_full_path)
+                mask_image = None
+                if (os.path.exists(mask_image_full_path)):
+                    mask_image = read_image(mask_image_full_path)
+                features_list.append(selected_approach_obj.extract_features(input_image, input_image_full_path, \
+                                                                             mask_image, mask_image_full_path))
+            else:
+                print('++++ NOTE: The image %s has been discarded (Not found)...'%image_name)
+
+        headers_list = selected_approach_obj.get_headers()
+        features_df = pd.DataFrame(features_list)
+
+        return headers_list, features_df
 
     # This function retrieves some basic statistics of the dataset.
     def check_dataset_statistics(self):
@@ -123,8 +149,9 @@ class Super_Class_Build_Dataset():
                             padding_for_missing_values=-1, discretize=False):
         print('++++ WARNING: the method build_dataset has not been implemented for this approach!')
 
-    def build_dataset_with_deep_features(self):
-        print('++++ WARNING: the method build_dataset_with_deep_features has not been implemented for this approach!')
+    def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, output_path, device):
+        print('++++ WARNING: the method build_dataset_with_imaging_data has not been implemented for this approach!')
 
     def store_dataset_in_csv_file(self, built_dataset_to_store, output_csv_file_path):
         built_dataset_to_store.to_csv(output_csv_file_path, index=False)
@@ -182,3 +209,44 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
         self.df_unique_values = self.df_unique_values.rename(columns={'exitus':'output'})
 
         return self.df_unique_values.columns, self.df_unique_values
+
+class Build_Dataset_Debugging_Only_Deep_Features(Super_Class_Build_Dataset):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, output_path, device):
+        universal_factory = UniversalFactory()
+        kwargs = {'device': device}
+        selected_approach_obj = universal_factory.create_object(globals(), \
+                             chosen_model_str + '_Deep_Features_Model', kwargs)
+
+        headers_list, features_df = self.__get_images_features__(chosen_model_str, associations_file, \
+                                    input_dataset_path, masks_dataset_path, selected_approach_obj, device)
+        features_df.columns = headers_list
+
+        return headers_list, features_df
+
+class Build_Dataset_Debugging_Only_Radiomics_Features(Super_Class_Build_Dataset):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, output_path, device):
+        universal_factory = UniversalFactory()
+        kwargs = {'device': device}
+        selected_approach_obj = universal_factory.create_object(globals(), 'Radiomics_Features_Class', kwargs)
+
+        headers_list, features_df = self.__get_images_features__(chosen_model_str, associations_file, \
+                                    input_dataset_path, masks_dataset_path, selected_approach_obj, device)
+        features_df.columns = headers_list
+
+        return headers_list, features_df

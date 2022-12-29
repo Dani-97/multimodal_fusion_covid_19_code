@@ -40,5 +40,4 @@ def main():
     selected_approach.check_dataset_statistics()
     selected_approach.store_dataset_in_csv_file(dataset_rows, args.output_path)
 
-
 main()

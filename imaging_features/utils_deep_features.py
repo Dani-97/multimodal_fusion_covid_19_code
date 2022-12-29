@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 import os
-from PIL import Image
 import torch
 import torchvision
 import torchvision.transforms.functional as TF
@@ -65,6 +64,15 @@ class Super_Model_Class():
 
         return input_image_tf
 
+    def get_headers(self):
+        return self.headers_list
+
+    # This function is used as part of the Adapter Pattern. The same is
+    # formulated for radiomics.
+    def extract_features(self, input_image_array, input_image_path, \
+                                            mask_image_array, mask_image_path):
+        return self.extract_deep_features(input_image_array)
+
 class AlexNet_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
@@ -102,6 +110,11 @@ class AlexNet_Deep_Features_Model(Super_Model_Class):
         for features_set_aux in output_features:
             features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
             it+=1
+
+        headers_list = []
+        for it in range(0, len(features_merged_together)):
+            headers_list.append('feature_%d'%it)
+        self.headers_list = headers_list
 
         return features_merged_together
 
@@ -146,6 +159,11 @@ class VGG_16_Deep_Features_Model(Super_Model_Class):
             features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
             it+=1
 
+        headers_list = []
+        for it in range(0, len(features_merged_together)):
+            headers_list.append('feature_%d'%it)
+        self.headers_list = headers_list
+
         return features_merged_together
 
-        # The rest of the methods are implemented in the parent class.
+    # The rest of the methods are implemented in the parent class.
