@@ -107,6 +107,7 @@ class Super_Class_Build_Dataset():
                                     input_dir_root_path, masks_dir_root_path, \
                                         selected_approach_obj, device, include_image_name=False):
         features_list = []
+
         for image_name in associations_df['Imagen'].values:
             input_image_full_path = '%s/%s'%(input_dir_root_path, image_name)
             mask_image_full_path = '%s/%s'%(masks_dir_root_path, image_name.replace('.png', '_mask.png'))
@@ -133,8 +134,45 @@ class Super_Class_Build_Dataset():
         return headers_list, features_df
 
     def __associate_clinical_and_imaging_datasets__(self, associations_df, clinical_data_df, imaging_data_df):
+        headers_list = imaging_data_df.columns[1:].values.tolist() + clinical_data_df.columns[1:].values.tolist()
+        global_merged_features_list = []
         for patient_id in clinical_data_df['codigo'].values:
-            current_image_name = associations_df.query("Código==%d"%lista[0])['Imagen'].values[0]
+            current_image_name_df_rows = associations_df.query("Código==%d"%patient_id)['Imagen']
+            if (len(current_image_name_df_rows)>0):
+                current_image_name = current_image_name_df_rows.values[0]
+                current_image_features_df_rows = imaging_data_df.query("image_name=='%s'"%current_image_name)
+                if (len(current_image_features_df_rows)>0):
+                    current_image_features = current_image_features_df_rows.values[0][1:].tolist()
+                    current_patient_clinical_data = clinical_data_df.query("codigo==%d"%patient_id).values[0][1:].tolist()
+                    current_merged_features_list = current_image_features + current_patient_clinical_data
+                    global_merged_features_list.append(current_merged_features_list)
+                else:
+                    print('++++ The features of image %s have not been obtained.'%current_image_name)
+            else:
+                print('++++ The patient %d has not any associated image, so it has been discarded.'%patient_id)
+
+        global_merged_features_df = pd.DataFrame(global_merged_features_list)
+        global_merged_features_df.columns = headers_list
+
+        return headers_list, global_merged_features_df
+
+    def __build_dataset_with_imaging_data_aux__(self, chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, device):
+        _, clinical_data_df = self.build_dataset(input_table_file, headers_file, include_patients_ids=True)
+
+        universal_factory = UniversalFactory()
+        kwargs = {'device': device}
+        selected_approach_obj = universal_factory.create_object(globals(), chosen_approach, kwargs)
+
+        associations_df = pd.read_csv(associations_file, sep=';')
+        imaging_data_columns, imaging_features_df = self.__get_images_features__(chosen_approach, associations_df, \
+                                    input_dataset_path, masks_dataset_path, selected_approach_obj, device, include_image_name=True)
+        imaging_features_df.columns = imaging_data_columns
+
+        merged_features_columns, global_merged_features_df = \
+            self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df)
+
+        return merged_features_columns, global_merged_features_df
 
     # This function retrieves some basic statistics of the dataset.
     def check_dataset_statistics(self):
@@ -240,7 +278,7 @@ class Build_Dataset_Debugging_Only_Deep_Features(Build_Dataset_Only_Hospitalized
     def check_dataset_statistics(self):
         pass
 
-    def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
+    def build_dataset_with_imaging_data(self, chosen_approach, headers_file, input_dataset_path, \
                                 masks_dataset_path, input_table_file, associations_file, output_path, device):
         _, clinical_data_df = super().build_dataset(input_table_file, headers_file, include_patients_ids=True)
 
@@ -258,7 +296,7 @@ class Build_Dataset_Debugging_Only_Deep_Features(Build_Dataset_Only_Hospitalized
 
         return headers_list, features_df
 
-class Build_Dataset_Debugging_Only_Radiomics_Features(Super_Class_Build_Dataset):
+class Build_Dataset_Debugging_Radiomics_Features(Build_Dataset_Only_Hospitalized):
 
     def __init__(self, **kwargs):
         pass
@@ -266,17 +304,11 @@ class Build_Dataset_Debugging_Only_Radiomics_Features(Super_Class_Build_Dataset)
     def check_dataset_statistics(self):
         pass
 
-    def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
                                 masks_dataset_path, input_table_file, associations_file, output_path, device):
-        universal_factory = UniversalFactory()
-        kwargs = {'device': device}
-        selected_approach_obj = universal_factory.create_object(globals(), 'Radiomics_Features_Class', kwargs)
-
-        associations_df = pd.read_csv(associations_file, sep=';')
-        headers_list, features_df = self.__get_images_features__(chosen_model_str, associations_df, \
-                                    input_dataset_path, masks_dataset_path, selected_approach_obj, device, include_image_name=True)
-        features_df.columns = headers_list
-
-        self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df)
+        chosen_approach = 'Radiomics_Features'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, device)
 
         return headers_list, features_df

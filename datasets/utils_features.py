@@ -69,7 +69,12 @@ class Super_Feature_Retrieval():
         translated_attrs_headers = []
 
         for attr_header_aux in attrs_headers:
-            translated_attrs_headers.append(config['TRANSLATIONS'][attr_header_aux])
+            try:
+                current_attr_header_aux = config['TRANSLATIONS'][attr_header_aux]
+            except:
+                current_attr_header_aux = attr_header_aux
+
+            translated_attrs_headers.append(current_attr_header_aux)
 
         return translated_attrs_headers
 

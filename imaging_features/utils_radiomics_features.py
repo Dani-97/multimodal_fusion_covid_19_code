@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 import os
 from radiomics import featureextractor
 import SimpleITK as sitk
@@ -18,7 +20,7 @@ class Radiomics_Features_Super_Class():
                                                 mask_image_array, mask_image_path):
         return self.obtain_features(input_image_path, mask_image_path)
 
-class No_Radiomics_Features_Class():
+class No_Radiomics_Features(Radiomics_Features_Super_Class):
 
     def __init__(self, **kwargs):
         pass
@@ -26,7 +28,7 @@ class No_Radiomics_Features_Class():
     def obtain_features(self, input_image_path, mask_image_path):
         return []
 
-class Radiomics_Features_Class(Radiomics_Features_Super_Class):
+class Radiomics_Features(Radiomics_Features_Super_Class):
 
     def __init__(self, **kwargs):
         pass
@@ -36,6 +38,12 @@ class Radiomics_Features_Class(Radiomics_Features_Super_Class):
         extractor = featureextractor.RadiomicsFeatureExtractor()
 
         input_image = sitk.ReadImage(input_image_path, sitk.sitkInt8)
+        input_image_np = sitk.GetArrayViewFromImage(input_image)
+        input_image_np = \
+            cv2.resize(input_image_np.astype(np.float), dsize=(256, 256), \
+                                                interpolation=cv2.INTER_CUBIC)
+        input_image = sitk.GetImageFromArray(input_image_np.astype(np.uint8))
+
         mask_image = sitk.ReadImage(mask_image_path, sitk.sitkInt8)
 
         feature_extraction_result = extractor.execute(input_image, mask_image)

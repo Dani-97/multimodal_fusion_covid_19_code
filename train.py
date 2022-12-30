@@ -108,6 +108,8 @@ def main():
         subsets = splitting.split(input_data, output_data)
         input_train_subset, input_test_subset, \
                              output_train_subset, output_test_subset = subsets
+        output_train_subset = output_train_subset.astype(float).astype(int).astype(str)
+        output_test_subset = output_test_subset.astype(float).astype(int).astype(str)
 
         # Performing the balancing on the dataset.
         kwargs = {}

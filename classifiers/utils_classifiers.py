@@ -148,7 +148,6 @@ class Super_Classifier_Class():
                          auc_roc_summary[it]])
 
     def save_model(self, filename):
-        print('DEBUGGING: save_model -> ', filename)
         pickle.dump(self.classifier, open(filename, 'wb'))
 
     def load_model(self, filename):

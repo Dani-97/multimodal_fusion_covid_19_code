@@ -117,7 +117,7 @@ class LungSegmentationClass():
 
         for current_image_name_aux in image_names_list:
             print('++++ Processing image %s...'%current_image_name_aux)
-            current_image = Image.open(os.path.join(images_root_dir, current_image_name_aux)).resize((512, 512)).convert('RGB', colors=256)
+            current_image = Image.open(os.path.join(images_root_dir, current_image_name_aux)).resize((256, 256)).convert('RGB', colors=256)
             segmentation_mask_image_name = current_image_name_aux.replace('.png', '_segmentation.png')
             current_mask_image_path = os.path.join(results_dir_root, segmentation_mask_image_name)
 

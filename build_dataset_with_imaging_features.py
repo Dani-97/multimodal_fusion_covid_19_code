@@ -23,12 +23,12 @@ def main():
     parser.add_argument("--associations_file", required=True, \
         help="Path to the file with the associations between an image and its code in the input table")
     parser.add_argument('--approach', type=str, required=True, \
-      choices=['Debugging_Only_Deep_Features', 'Debugging_Only_Radiomics_Features'], \
+      choices=['Debugging_Only_Deep_Features', 'Debugging_Radiomics_Features'], \
                                           help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)
-    parser.add_argument("--model", help="Name of the autoencoder architecture to use if deep features were chosen", \
-                        choices=['VGG_16', 'AlexNet'])
+    parser.add_argument("--image_feature_extraction_approach", help="Name of the autoencoder architecture to use if deep features were chosen", \
+                        choices=['Radiomics_Features', 'VGG_16_Deep_Features_Model', 'AlexNet_Deep_Features_Model'])
     parser.add_argument("--device", help="Select CPU or GPU", required=True, \
                         choices=['CPU', 'CUDA'])
     args = parser.parse_args()
@@ -38,9 +38,10 @@ def main():
     kwargs = {}
     selected_approach = universal_factory.create_object(globals(), \
                                       'Build_Dataset_' + args.approach, kwargs)
-    dataset_headers, dataset_rows = selected_approach.build_dataset_with_imaging_data(args.model, \
-        args.headers_file, args.input_dataset_path, args.masks_dataset_path, args.input_table_file, \
-            args.associations_file, args.output_path, device = args.device)
+    dataset_headers, dataset_rows = \
+        selected_approach.build_dataset_with_imaging_data(args.headers_file, \
+            args.input_dataset_path, args.masks_dataset_path, args.input_table_file, \
+                args.associations_file, args.output_path, device = args.device)
     selected_approach.check_dataset_statistics()
     selected_approach.store_dataset_in_csv_file(dataset_rows, args.output_path)
 
