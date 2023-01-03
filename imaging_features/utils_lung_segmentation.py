@@ -1,9 +1,13 @@
 from collections import OrderedDict
+import cv2
+import numpy as np
 import os, torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from PIL import Image
+from skimage.filters import threshold_otsu
+from skimage.morphology import erosion, disk, binary_opening, binary_closing
 
 class UNet(nn.Module):
 
@@ -103,6 +107,62 @@ class LungSegmentationClass():
     def __init__(self):
         pass
 
+    def __convertImage__(self, model_output, border_size = 0):
+        # La devolvemos a CPU (en caso de que no estuviera) y la reescalamos al tamaño original con
+        # interpolación bicúbica para evitar pixelado
+        PIL_IMAGE = transforms.ToPILImage()(model_output.squeeze(0).to('cpu'))
+        current_image_size = model_output.squeeze(0).shape[1:]
+
+        # Apertura antes de reescalado para optimizar
+        NUMPY_IMAGE = binary_opening(np.array(PIL_IMAGE),disk(3))
+        NUMPY_IMAGE = binary_closing(NUMPY_IMAGE,disk(3)).astype('uint8')
+
+        # Rellenamos huecos dentro de pulmones
+        # Rellenaremos el background y añadiremos el inverso para que queden rellenos los huecos.
+        h, w = NUMPY_IMAGE.shape[:2]
+
+        # La primera y última filas se dejan vacías para los pulmones que abarquen toda la imagen. De esta manera, no dejarán hueco entre ellos
+        # que estropee el floodFill
+        NUMPY_IMAGE[0,:] = 0
+        NUMPY_IMAGE[h-1,:] = 0
+
+        mask = np.zeros((h+2, w+2), np.uint8)
+        ONLY_HOLES = NUMPY_IMAGE.copy().astype('uint8')
+        cv2.floodFill(ONLY_HOLES, mask, (0,0), 255)
+
+        ONLY_HOLES = cv2.bitwise_not(ONLY_HOLES)
+        NUMPY_IMAGE = NUMPY_IMAGE | ONLY_HOLES
+
+        PIL_IMAGE = Image.fromarray(NUMPY_IMAGE).resize(current_image_size, Image.BICUBIC)
+
+        # Binarizamos image para eliminar el difuminado de la interpolación
+        NUMPY_IMAGE = np.array(PIL_IMAGE)
+        NUMPY_IMAGE = NUMPY_IMAGE > threshold_otsu(NUMPY_IMAGE)
+
+        # Si nos pide bordes, erosionamos y restamos a la imagen original
+        if border_size > 0:
+            ERODED_IMAGE = erosion(NUMPY_IMAGE,disk(border_size))
+            NUMPY_IMAGE = NUMPY_IMAGE & (np.invert(ERODED_IMAGE))
+
+
+        # Quedarnos con las dos componentes más grandes si es posible.
+        nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(NUMPY_IMAGE.astype('uint8'), connectivity=4)
+        sizes = stats[1:, -1]; nb_components = nb_components - 1
+        NUMPY_IMAGE = np.zeros((output.shape))
+
+        if len(sizes) <= 2:
+            for i in range(0, nb_components):
+                NUMPY_IMAGE[output == i + 1] = 255
+        else:
+            reordered_list = sorted(sizes,reverse=True)
+
+            i = list(sizes).index(reordered_list[0])
+            NUMPY_IMAGE[output == i + 1] = 255
+            i = list(sizes).index(reordered_list[1])
+            NUMPY_IMAGE[output == i + 1] = 255
+
+        return Image.fromarray(NUMPY_IMAGE).convert('RGB')
+
     def obtain_lung_segmentation(self, images_root_dir, results_dir_root, \
             trained_model_path = './imaging_features/trained_segmentation_model.pt', device='cuda:0'):
         print('Obtaining lung segmentation with model stored at %s..'%trained_model_path)
@@ -128,4 +188,5 @@ class LungSegmentationClass():
             image = tensor_image.to(device)
 
             output = current_network(image).data
-            vutils.save_image(output, '%s/%s'%(results_dir_root, current_mask_image_path))
+            output_postprocessed = self.__convertImage__(output)
+            output_postprocessed.save('%s/%s'%(results_dir_root, current_image_name_aux))
