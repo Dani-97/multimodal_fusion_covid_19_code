@@ -81,7 +81,9 @@ class Super_Class_Build_Dataset():
         self.df_numerical_attrs_headers = self.original_dataset_df.columns[self.numerical_attrs_idxs]
         self.df_discrete_attrs_headers = self.original_dataset_df.columns[self.discrete_attrs_idxs]
 
-        self.df_unique_values = self.original_dataset_df[self.df_columns_in_order].drop_duplicates()
+        columns_without_code = self.df_columns_in_order[1:]
+
+        self.df_unique_values = self.original_dataset_df[self.df_columns_in_order].drop_duplicates(subset=columns_without_code)
         self.df_unique_values = self.df_unique_values.replace('Urgencias', 0)
         self.df_unique_values = self.df_unique_values.replace('Hospitalizados', 1)
         self.df_unique_values = self.df_unique_values.replace('Residencias', 2)
@@ -194,9 +196,10 @@ class Super_Class_Build_Dataset():
         print('***** List of other attributes (%d):\n\n'%len(self.original_dataset_df.columns[self.other_fields_idxs]), \
                                               self.original_dataset_df.columns[self.other_fields_idxs], '\n')
 
+        columns_without_code = self.df_columns_in_order[1:]
         print('Total number of rows = ', len(self.original_dataset_df[self.df_columns_in_order]))
         print('Total number of rows without duplicates = ', \
-                                           len(self.original_dataset_df[self.df_columns_in_order].drop_duplicates()))
+                                           len(self.original_dataset_df[self.df_columns_in_order].drop_duplicates(subset=columns_without_code)))
 
     def build_dataset(self, input_filename, headers_file, \
                             padding_for_missing_values=-1, discretize=False):
@@ -269,32 +272,6 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
         self.df_unique_values = self.df_unique_values.rename(columns={'exitus':'output'})
 
         return self.df_unique_values.columns, self.df_unique_values
-
-class Build_Dataset_Debugging_Only_Deep_Features(Build_Dataset_Only_Hospitalized):
-
-    def __init__(self, **kwargs):
-        pass
-
-    def check_dataset_statistics(self):
-        pass
-
-    def build_dataset_with_imaging_data(self, chosen_approach, headers_file, input_dataset_path, \
-                                masks_dataset_path, input_table_file, associations_file, output_path, device):
-        _, clinical_data_df = super().build_dataset(input_table_file, headers_file, include_patients_ids=True)
-
-        universal_factory = UniversalFactory()
-        kwargs = {'device': device}
-        selected_approach_obj = universal_factory.create_object(globals(), \
-                             chosen_model_str + '_Deep_Features_Model', kwargs)
-
-        associations_df = pd.read_csv(associations_file, sep=';')
-        headers_list, imaging_features_df = self.__get_images_features__(chosen_model_str, associations_df, \
-                        input_dataset_path, masks_dataset_path, selected_approach_obj, device, include_image_name=True)
-        imaging_features_df.columns = headers_list
-
-        self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df)
-
-        return headers_list, features_df
 
 class Build_Dataset_Debugging_Radiomics_Features(Build_Dataset_Only_Hospitalized):
 

@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--associations_file", required=True, \
         help="Path to the file with the associations between an image and its code in the input table")
     parser.add_argument('--approach', type=str, required=True, \
-      choices=['Debugging_Only_Deep_Features', 'Debugging_Radiomics_Features'], \
+      choices=['Debugging_Radiomics_Features'], \
                                           help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)
