@@ -108,7 +108,7 @@ class Super_Class_Build_Dataset():
                                         selected_approach_obj, device, include_image_name=False):
         features_list = []
 
-        for image_name in associations_df['Imagen'].values:
+        for image_name in associations_df['image_name'].values:
             input_image_full_path = '%s/%s'%(input_dir_root_path, image_name)
             mask_image_full_path = '%s/%s'%(masks_dir_root_path, image_name.replace('.png', '_mask.png'))
             if (os.path.exists(input_image_full_path)):
@@ -137,7 +137,7 @@ class Super_Class_Build_Dataset():
         headers_list = imaging_data_df.columns[1:].values.tolist() + clinical_data_df.columns[1:].values.tolist()
         global_merged_features_list = []
         for patient_id in clinical_data_df['codigo'].values:
-            current_image_name_df_rows = associations_df.query("Código==%d"%patient_id)['Imagen']
+            current_image_name_df_rows = associations_df.query("patient_id==%d"%patient_id)['image_name']
             if (len(current_image_name_df_rows)>0):
                 current_image_name = current_image_name_df_rows.values[0]
                 current_image_features_df_rows = imaging_data_df.query("image_name=='%s'"%current_image_name)
@@ -164,7 +164,7 @@ class Super_Class_Build_Dataset():
         kwargs = {'device': device}
         selected_approach_obj = universal_factory.create_object(globals(), chosen_approach, kwargs)
 
-        associations_df = pd.read_csv(associations_file, sep=';')
+        associations_df = pd.read_csv(associations_file)
         imaging_data_columns, imaging_features_df = self.__get_images_features__(chosen_approach, associations_df, \
                                     input_dataset_path, masks_dataset_path, selected_approach_obj, device, include_image_name=True)
         imaging_features_df.columns = imaging_data_columns
