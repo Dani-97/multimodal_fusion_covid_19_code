@@ -1,10 +1,10 @@
 import argparse
 from classifiers.utils_classifiers import *
 from regressors.utils_regressors import *
-from datasets.utils_balancing import *
-from datasets.utils_datasets import *
-from datasets.utils_features import *
-from datasets.utils_normalization import *
+from dataset.utils_balancing import *
+from dataset.utils_datasets import *
+from dataset.utils_features import *
+from dataset.utils_normalization import *
 import numpy as np
 import os
 from pathlib import Path

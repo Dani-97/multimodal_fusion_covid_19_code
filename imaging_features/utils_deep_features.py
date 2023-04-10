@@ -4,6 +4,7 @@ import os
 import torch
 import torchvision
 import torchvision.transforms.functional as TF
+import segmentation_models_pytorch as smp
 
 class UniversalFactory():
 
@@ -70,100 +71,185 @@ class Super_Model_Class():
     # This function is used as part of the Adapter Pattern. The same is
     # formulated for radiomics.
     def extract_features(self, input_image_array, input_image_path, \
-                                            mask_image_array, mask_image_path):
-        return self.extract_deep_features(input_image_array)
+                                            mask_image_array, mask_image_path, layer='all'):
+        return self.extract_deep_features(input_image_array, layer=layer)
 
-class AlexNet_Deep_Features_Model(Super_Model_Class):
+# class AlexNet_Deep_Features_Model(Super_Model_Class):
+#
+#     def __init__(self, **kwargs):
+#         self.deep_features_model = torchvision.models.alexnet(pretrained=True)
+#         self.device = kwargs['device']
+#
+#     def extract_deep_features(self, input_data, layer=None):
+#         universal_factory = UniversalFactory()
+#         kwargs = {}
+#         device_chosen = 'Move_To_' + self.device
+#         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
+#
+#         input_data = input_data.repeat(1, 3, 1, 1)
+#         self.deep_features_model.train(False)
+#         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
+#
+#         input_data = move_to_device_module.execute_move_to_device(input_data)
+#         # This variable will contain the modified version of the network
+#         # architecture that allows to retrieve the features from a certain
+#         # layer.
+#         modified_deep_features_model = copy.deepcopy(self.deep_features_model)
+#         output_features = []
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         modified_deep_features_model.classifier[5] = Identity()
+#         modified_deep_features_model.classifier[6] = Identity()
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         modified_deep_features_model.classifier[2] = Identity()
+#         modified_deep_features_model.classifier[3] = Identity()
+#         modified_deep_features_model.classifier[4] = Identity()
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         it = 0
+#         features_merged_together = []
+#         for features_set_aux in output_features:
+#             features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
+#             it+=1
+#
+#         headers_list = []
+#         for it in range(0, len(features_merged_together)):
+#             headers_list.append('feature_%d'%it)
+#         self.headers_list = headers_list
+#
+#         return features_merged_together
+#
+#     # The rest of the methods are implemented in the parent class.
+
+# class VGG_16_Deep_Features_Model(Super_Model_Class):
+#
+#     def __init__(self, **kwargs):
+#         self.deep_features_model = torchvision.models.vgg16(pretrained=True)
+#         self.device = kwargs['device']
+#
+#     def extract_deep_features(self, input_data, layer=None):
+#         universal_factory = UniversalFactory()
+#         kwargs = {}
+#         device_chosen = 'Move_To_' + self.device
+#         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
+#
+#         self.deep_features_model.train(False)
+#         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
+#
+#         input_data = input_data.repeat(1, 3, 1, 1)
+#         input_data = move_to_device_module.execute_move_to_device(input_data)
+#         # This variable will contain the modified version of the network
+#         # architecture that allows to retrieve the features from a certain
+#         # layer.
+#         modified_deep_features_model = copy.deepcopy(self.deep_features_model)
+#         output_features = []
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         modified_deep_features_model.classifier[4] = Identity()
+#         modified_deep_features_model.classifier[5] = Identity()
+#         modified_deep_features_model.classifier[6] = Identity()
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         modified_deep_features_model.classifier[1] = Identity()
+#         modified_deep_features_model.classifier[2] = Identity()
+#         modified_deep_features_model.classifier[3] = Identity()
+#         output_features.append(modified_deep_features_model(input_data))
+#
+#         it = 0
+#         features_merged_together = []
+#         for features_set_aux in output_features:
+#             features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
+#             it+=1
+#
+#         headers_list = []
+#         for it in range(0, len(features_merged_together)):
+#             headers_list.append('feature_%d'%it)
+#         self.headers_list = headers_list
+#
+#         return features_merged_together
+#
+#     # The rest of the methods are implemented in the parent class.
+
+class Mixed_Vision_Transformer_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = torchvision.models.alexnet(pretrained=True)
+        self.deep_features_model = smp.FPN(encoder_name="mit_b0", encoder_weights="imagenet", in_channels=3, classes=1)
         self.device = kwargs['device']
 
-    def extract_deep_features(self, input_data):
+    # The parameter 'layer' can be 'layer1', 'layer2', 'layer3'.
+    def extract_deep_features(self, input_data, layer='all'):
         universal_factory = UniversalFactory()
         kwargs = {}
         device_chosen = 'Move_To_' + self.device
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
-        self.deep_features_model.train(False)
+        self.deep_features_model.eval()
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
 
+        input_data = input_data.repeat(1, 3, 1, 1)
         input_data = move_to_device_module.execute_move_to_device(input_data)
-        # This variable will contain the modified version of the network
-        # architecture that allows to retrieve the features from a certain
-        # layer.
-        modified_deep_features_model = copy.deepcopy(self.deep_features_model)
-        output_features = []
-        output_features.append(modified_deep_features_model(input_data))
+        output_encoder = self.deep_features_model.encoder(input_data)
 
-        modified_deep_features_model.classifier[5] = Identity()
-        modified_deep_features_model.classifier[6] = Identity()
-        output_features.append(modified_deep_features_model(input_data))
+        if (layer=='all'):
+            output_feats_layers = []
 
-        modified_deep_features_model.classifier[2] = Identity()
-        modified_deep_features_model.classifier[3] = Identity()
-        modified_deep_features_model.classifier[4] = Identity()
-        output_features.append(modified_deep_features_model(input_data))
+            output_feats_layers.append(np.mean(output_encoder[1].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[3].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[4].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[5].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
 
-        it = 0
-        features_merged_together = []
-        for features_set_aux in output_features:
-            features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
-            it+=1
+            output_feats_layers = np.concatenate(output_feats_layers)
+        else:
+            layer_int_idx = int(layer.replace('layer', ''))-1
+            output_feats_layers = np.mean(output_encoder[layer_int_idx+2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
 
+        output_feats_layers = output_feats_layers.tolist()
         headers_list = []
-        for it in range(0, len(features_merged_together)):
+        for it in range(0, len(output_feats_layers)):
             headers_list.append('feature_%d'%it)
         self.headers_list = headers_list
 
-        return features_merged_together
+        return output_feats_layers
 
-    # The rest of the methods are implemented in the parent class.
-
-class VGG_16_Deep_Features_Model(Super_Model_Class):
+class DPN_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = torchvision.models.vgg16(pretrained=True)
+        self.deep_features_model = smp.FPN(encoder_name="dpn68", encoder_weights="imagenet", in_channels=3, classes=1)
         self.device = kwargs['device']
 
-    def extract_deep_features(self, input_data):
+    def extract_deep_features(self, input_data, layer='all'):
         universal_factory = UniversalFactory()
         kwargs = {}
         device_chosen = 'Move_To_' + self.device
         move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
-        self.deep_features_model.train(False)
+        self.deep_features_model.eval()
         self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
 
+        input_data = input_data.repeat(1, 3, 1, 1)
         input_data = move_to_device_module.execute_move_to_device(input_data)
-        # This variable will contain the modified version of the network
-        # architecture that allows to retrieve the features from a certain
-        # layer.
-        modified_deep_features_model = copy.deepcopy(self.deep_features_model)
-        output_features = []
-        output_features.append(modified_deep_features_model(input_data))
+        output_encoder = self.deep_features_model.encoder(input_data)
 
-        modified_deep_features_model.classifier[4] = Identity()
-        modified_deep_features_model.classifier[5] = Identity()
-        modified_deep_features_model.classifier[6] = Identity()
-        output_features.append(modified_deep_features_model(input_data))
+        if (layer=='all'):
+            output_feats_layers = []
 
-        modified_deep_features_model.classifier[1] = Identity()
-        modified_deep_features_model.classifier[2] = Identity()
-        modified_deep_features_model.classifier[3] = Identity()
-        output_features.append(modified_deep_features_model(input_data))
+            output_feats_layers.append(np.mean(output_encoder[1].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[3].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[4].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+            output_feats_layers.append(np.mean(output_encoder[5].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
 
-        it = 0
-        features_merged_together = []
-        for features_set_aux in output_features:
-            features_merged_together+=(features_set_aux.cpu().detach().numpy().tolist()[0])
-            it+=1
+            output_feats_layers = np.concatenate(output_feats_layers)
+        else:
+            layer_int_idx = int(layer.replace('layer', ''))-1
+            output_feats_layers = np.mean(output_encoder[layer_int_idx+2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
 
+        output_feats_layers = output_feats_layers.tolist()
         headers_list = []
-        for it in range(0, len(features_merged_together)):
+        for it in range(0, len(output_feats_layers)):
             headers_list.append('feature_%d'%it)
         self.headers_list = headers_list
 
-        return features_merged_together
-
-    # The rest of the methods are implemented in the parent class.
+        return output_feats_layers

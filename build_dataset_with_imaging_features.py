@@ -1,6 +1,6 @@
 import argparse
-from datasets.utils_build_datasets import *
-from datasets.utils_datasets import *
+from dataset.utils_build_datasets import *
+from dataset.utils_datasets import *
 from utils import *
 
 class UniversalFactory():
@@ -23,12 +23,13 @@ def main():
     parser.add_argument("--associations_file", required=True, \
         help="Path to the file with the associations between an image and its code in the input table")
     parser.add_argument('--approach', type=str, required=True, \
-      choices=['Debugging_Radiomics_Features'], \
+      choices=['Mixed_Vision_Transformer_Only_Hospitalized', 'Mixed_Vision_Transformer_Hospitalized_And_Urgencies', \
+               'DPN_Model_Only_Hospitalized'], \
                                           help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)
-    parser.add_argument("--image_feature_extraction_approach", help="Name of the autoencoder architecture to use if deep features were chosen", \
-                        choices=['Radiomics_Features', 'VGG_16_Deep_Features_Model', 'AlexNet_Deep_Features_Model'])
+    parser.add_argument("--layer", type=str, help="Name of the autoencoder architecture to use if deep features were chosen", \
+                         choices=['layer1', 'layer2', 'layer3', 'layer4', 'all'], required=True)
     parser.add_argument("--device", help="Select CPU or GPU", required=True, \
                         choices=['CPU', 'CUDA'])
     args = parser.parse_args()
@@ -41,7 +42,7 @@ def main():
     dataset_headers, dataset_rows = \
         selected_approach.build_dataset_with_imaging_data(args.headers_file, \
             args.input_dataset_path, args.masks_dataset_path, args.input_table_file, \
-                args.associations_file, args.output_path, device = args.device)
+                args.associations_file, args.output_path, device = args.device, layer=args.layer)
     selected_approach.check_dataset_statistics()
     selected_approach.store_dataset_in_csv_file(dataset_rows, args.output_path)
 
