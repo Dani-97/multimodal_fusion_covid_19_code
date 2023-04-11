@@ -10,9 +10,9 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from utils import read_csv_file, read_headers_file
 from utils import write_csv_file, convert_si_no_to_int
-from imaging_features.utils_deep_features import *
-from imaging_features.utils_radiomics_features import *
-from imaging_features.utils_images import read_image
+from feature_extraction.utils_deep_features import *
+from feature_extraction.utils_radiomics_features import *
+from feature_extraction.utils_images import read_image
 
 class UniversalFactory():
 
@@ -118,6 +118,8 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         except pd.errors.ParserError:
             self.original_dataset_df = pd.read_csv(original_input_dataset, delimiter=',')
         self.patient_id_idx = [0]
+        self.rxs_codes_list = self.original_dataset_df['Código asignado'].tolist()
+        self.patient_text_reports = self.original_dataset_df['Hallazgos']
         self.code_idx = [1]
         self.cohort_idx = [7]
         self.exitus_idx = [5]
@@ -185,9 +187,7 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         unique_patients_ids_list = np.unique(clinical_data_df['patient_id'])
 
         total_nofpatients = len(unique_patients_ids_list)
-        it = 0
         for current_patient_id_aux in unique_patients_ids_list:
-            it+=1
             current_patient_fst_rx_code = \
                 clinical_data_df.query("patient_id==%d"%current_patient_id_aux).sort_values('fecha_seguimiento').iloc[0]['codigo']
 
@@ -217,23 +217,44 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
 
         return headers_list, features_df
 
-    def __associate_clinical_and_imaging_datasets__(self, associations_df, clinical_data_df, imaging_data_df):
+    def __get_text_reports_features__(self, selected_approach_obj, device):
+        sentences_list = self.patient_text_reports.values.tolist()
+        sentences_embeddings = selected_approach_obj.extract_deep_features(sentences_list)
+
+        headers_list = ['rx_code']
+        for idx in range(0, sentences_embeddings.shape[1]):
+            headers_list.append('sentenc_embeds_%d'%idx)
+
+        self.rxs_codes_list = np.expand_dims(np.array(self.rxs_codes_list), axis=1)
+        sentenc_embeds_np = np.concatenate([self.rxs_codes_list, sentences_embeddings], axis=1)
+        sentenc_embeds_df = pd.DataFrame(sentenc_embeds_np)
+        sentenc_embeds_df.columns = headers_list
+        sentenc_embeds_df['rx_code'] = sentenc_embeds_df['rx_code'].astype(int)
+
+        return headers_list, sentenc_embeds_df
+
+    def __associate_clinical_and_imaging_datasets__(self, associations_df, clinical_data_df, imaging_data_df, text_reports_features_df):
         # Drop the unnecessary columns from the clinical data.
         clinical_data_df = clinical_data_df.drop(columns=['fecha_seguimiento'])
 
-        headers_list = imaging_data_df.columns[1:].values.tolist() + clinical_data_df.columns[3:].values.tolist()
+        sentenc_embeds_headers_list = text_reports_features_df.columns[1:].tolist()
+
+        headers_list = imaging_data_df.columns[1:].values.tolist() + sentenc_embeds_headers_list + clinical_data_df.columns[3:].values.tolist()
         global_merged_features_list = []
         full_images_names_list = imaging_data_df['image_name']
+
         for current_rx_code_aux in clinical_data_df['codigo'].values:
             current_rx_info = clinical_data_df.query("codigo==%d"%current_rx_code_aux)
             if (len(current_rx_info)>0):
                 current_patient_id_aux = current_rx_info.iloc[0]['patient_id']
                 current_image_name = 'patient_%d_rxcode_%d.jpg'%(current_patient_id_aux, current_rx_code_aux)
+                current_rx_code = current_image_name.split('_')[3].split('.')[0]
                 if (current_image_name in full_images_names_list.tolist()):
                     current_image_features_df_rows = imaging_data_df.query("image_name=='%s'"%current_image_name)
                     current_image_features = current_image_features_df_rows.values[0][1:].tolist()
                     current_patient_clinical_data = current_rx_info.values[0][3:]
-                    current_merged_features_list = current_image_features + current_patient_clinical_data.tolist()
+                    text_reports_features_list = text_reports_features_df.query('rx_code==%s'%current_rx_code).values[0, 1:].tolist()
+                    current_merged_features_list = current_image_features + text_reports_features_list + current_patient_clinical_data.tolist()
                     global_merged_features_list.append(current_merged_features_list)
                 else:
                     print('++++ The features of image %s have not been obtained.'%current_image_name)
@@ -246,12 +267,20 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         return headers_list, global_merged_features_df
 
     def __build_dataset_with_imaging_data_aux__(self, chosen_approach, headers_file, input_dataset_path, \
-                                    masks_dataset_path, input_table_file, associations_file, output_path, device, layer):
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method):
         _, clinical_data_df = self.build_dataset_with_patients_ids(input_table_file, headers_file)
+        self.clinical_data_df = clinical_data_df
 
         universal_factory = UniversalFactory()
         kwargs = {'device': device}
         selected_approach_obj = universal_factory.create_object(globals(), chosen_approach, kwargs)
+
+        sentences_embeds_retrieval_obj = \
+            universal_factory.create_object(globals(), text_reports_embeds_method + '_Deep_Features_Model', kwargs)
+
+        text_reports_data_columns, text_reports_features_df = \
+                            self.__get_text_reports_features__(sentences_embeds_retrieval_obj, device)
 
         associations_df = pd.read_csv(associations_file)
         imaging_data_columns, imaging_features_df = self.__get_images_features__(chosen_approach, clinical_data_df, \
@@ -259,7 +288,7 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         imaging_features_df.columns = imaging_data_columns
 
         merged_features_columns, global_merged_features_df = \
-            self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df)
+            self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df, text_reports_features_df)
 
         return merged_features_columns, global_merged_features_df
 
@@ -297,7 +326,8 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         print('++++ WARNING: the method build_dataset_with_patients_ids has not been implemented for this approach!')
 
     def build_dataset_with_imaging_data(self, chosen_model_str, headers_file, input_dataset_path, \
-                                masks_dataset_path, input_table_file, associations_file, output_path, device, layer):
+                                masks_dataset_path, input_table_file, associations_file, output_path, \
+                                    device, layer, text_reports_embeds_method):
         print('++++ WARNING: the method build_dataset_with_imaging_data has not been implemented for this approach!')
 
     def store_dataset_in_csv_file(self, built_dataset_to_store, output_csv_file_path):
@@ -435,14 +465,34 @@ class Build_Dataset_DPN_Model_Only_Hospitalized(Build_Dataset_Only_Hospitalized)
         pass
 
     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
-                                masks_dataset_path, input_table_file, associations_file, output_path, device, layer):
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
         chosen_approach = 'DPN_Deep_Features_Model'
         headers_list, features_df = \
           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
-                                    masks_dataset_path, input_table_file, associations_file, output_path, device, layer)
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
 
         return headers_list, features_df
 
+class Build_Dataset_DPN_Model_Hospitalized_And_Urgencies(Build_Dataset_Hospitalized_And_Urgencies):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
+        chosen_approach = 'DPN_Deep_Features_Model'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
+
+        return headers_list, features_df
 
 class Build_Dataset_Mixed_Vision_Transformer_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
 
@@ -453,11 +503,13 @@ class Build_Dataset_Mixed_Vision_Transformer_Only_Hospitalized(Build_Dataset_Onl
         pass
 
     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
-                                masks_dataset_path, input_table_file, associations_file, output_path, device, layer):
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
         chosen_approach = 'Mixed_Vision_Transformer_Model'
         headers_list, features_df = \
           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
-                                    masks_dataset_path, input_table_file, associations_file, output_path, device, layer)
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
 
         return headers_list, features_df
 
@@ -470,10 +522,12 @@ class Build_Dataset_Mixed_Vision_Transformer_Hospitalized_And_Urgencies(Build_Da
         pass
 
     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
-                                masks_dataset_path, input_table_file, associations_file, output_path, device, layer):
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
         chosen_approach = 'Mixed_Vision_Transformer_Model'
         headers_list, features_df = \
           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
-                                    masks_dataset_path, input_table_file, associations_file, output_path, device, layer)
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
 
         return headers_list, features_df

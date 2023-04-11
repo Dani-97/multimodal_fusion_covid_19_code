@@ -1,10 +1,11 @@
 import copy
 import numpy as np
 import os
+import segmentation_models_pytorch as smp
 import torch
 import torchvision
 import torchvision.transforms.functional as TF
-import segmentation_models_pytorch as smp
+from transformers import BertModel, BertTokenizerFast
 
 class UniversalFactory():
 
@@ -46,7 +47,7 @@ class Move_To_CUDA(Move_To_CPU):
         if (logging):
             print('++++ A variable is being transferred to a CUDA device')
 
-        output_data = input_data.cuda()
+        output_data = input_data.to('cuda:0')
 
         return output_data
 
@@ -202,8 +203,8 @@ class Mixed_Vision_Transformer_Model(Super_Model_Class):
 
             output_feats_layers = np.concatenate(output_feats_layers)
         else:
-            layer_int_idx = int(layer.replace('layer', ''))-1
-            output_feats_layers = np.mean(output_encoder[layer_int_idx+2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
+            layer_int_idx = int(layer.replace('layer', ''))
+            output_feats_layers = np.mean(output_encoder[layer_int_idx].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
 
         output_feats_layers = output_feats_layers.tolist()
         headers_list = []
@@ -243,8 +244,8 @@ class DPN_Deep_Features_Model(Super_Model_Class):
 
             output_feats_layers = np.concatenate(output_feats_layers)
         else:
-            layer_int_idx = int(layer.replace('layer', ''))-1
-            output_feats_layers = np.mean(output_encoder[layer_int_idx+2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
+            layer_int_idx = int(layer.replace('layer', ''))
+            output_feats_layers = np.mean(output_encoder[layer_int_idx].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
 
         output_feats_layers = output_feats_layers.tolist()
         headers_list = []
@@ -253,3 +254,46 @@ class DPN_Deep_Features_Model(Super_Model_Class):
         self.headers_list = headers_list
 
         return output_feats_layers
+
+class LaBSE_Deep_Features_Model(Super_Model_Class):
+
+    def __init__(self, **kwargs):
+        self.tokenizer = BertTokenizerFast.from_pretrained("setu4993/LaBSE")
+        self.deep_features_model = BertModel.from_pretrained("setu4993/LaBSE")
+        self.deep_features_model = self.deep_features_model.eval()
+
+        self.device = kwargs['device']
+
+    def extract_deep_features(self, input_data, layer='all'):
+        universal_factory = UniversalFactory()
+        kwargs = {}
+        device_chosen = 'Move_To_' + self.device
+        move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
+
+        self.deep_features_model.eval()
+        self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
+
+        output_feats_layers = []
+        batches_list = np.array_split(input_data, int(len(input_data)/4))
+        for current_batch_aux in batches_list:
+            tokenized_sentences = self.tokenizer(current_batch_aux.tolist(), return_tensors="pt", padding=True)
+            move_to_device_module.execute_move_to_device(tokenized_sentences)
+            with torch.no_grad():
+                model_outputs = self.deep_features_model(**tokenized_sentences)
+
+            sentences_embeddings = model_outputs.pooler_output.cpu().detach().numpy()
+
+            if (len(output_feats_layers)==0):
+                output_feats_layers = sentences_embeddings
+            else:
+                output_feats_layers = np.concatenate([output_feats_layers, sentences_embeddings])
+
+        return output_feats_layers
+
+class No_Deep_Features_Model(Super_Model_Class):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def extract_deep_features(self, input_data, layer='all'):
+        return []

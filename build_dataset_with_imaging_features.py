@@ -24,14 +24,17 @@ def main():
         help="Path to the file with the associations between an image and its code in the input table")
     parser.add_argument('--approach', type=str, required=True, \
       choices=['Mixed_Vision_Transformer_Only_Hospitalized', 'Mixed_Vision_Transformer_Hospitalized_And_Urgencies', \
-               'DPN_Model_Only_Hospitalized'], \
+               'DPN_Model_Only_Hospitalized', 'DPN_Model_Hospitalized_And_Urgencies'], \
                                           help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)
     parser.add_argument("--layer", type=str, help="Name of the autoencoder architecture to use if deep features were chosen", \
-                         choices=['layer1', 'layer2', 'layer3', 'layer4', 'all'], required=True)
+                         choices=['layer1', 'layer2', 'layer3', 'layer4', 'layer5', 'all'], required=True)
     parser.add_argument("--device", help="Select CPU or GPU", required=True, \
                         choices=['CPU', 'CUDA'])
+    parser.add_argument("--text_reports_embeds_method", type=str, choices=['No', 'LaBSE'], required=True, \
+                        help='Method to obtain the embeddings of the text reports. Select No in case only imaging features must be ' + \
+                        'obtained')
     args = parser.parse_args()
 
     universal_factory = UniversalFactory()
@@ -42,7 +45,9 @@ def main():
     dataset_headers, dataset_rows = \
         selected_approach.build_dataset_with_imaging_data(args.headers_file, \
             args.input_dataset_path, args.masks_dataset_path, args.input_table_file, \
-                args.associations_file, args.output_path, device = args.device, layer=args.layer)
+                args.associations_file, args.output_path, args.text_reports_embeds_method, \
+                    device = args.device, layer=args.layer)
+
     selected_approach.check_dataset_statistics()
     selected_approach.store_dataset_in_csv_file(dataset_rows, args.output_path)
 
