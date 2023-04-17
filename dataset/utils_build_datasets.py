@@ -222,14 +222,16 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         sentences_embeddings = selected_approach_obj.extract_deep_features(sentences_list)
 
         headers_list = ['rx_code']
-        for idx in range(0, sentences_embeddings.shape[1]):
-            headers_list.append('sentenc_embeds_%d'%idx)
+        sentenc_embeds_df = pd.DataFrame([])
+        if (len(sentences_embeddings)!=0):
+            for idx in range(0, sentences_embeddings.shape[1]):
+                headers_list.append('sentenc_embeds_%d'%idx)
 
-        self.rxs_codes_list = np.expand_dims(np.array(self.rxs_codes_list), axis=1)
-        sentenc_embeds_np = np.concatenate([self.rxs_codes_list, sentences_embeddings], axis=1)
-        sentenc_embeds_df = pd.DataFrame(sentenc_embeds_np)
-        sentenc_embeds_df.columns = headers_list
-        sentenc_embeds_df['rx_code'] = sentenc_embeds_df['rx_code'].astype(int)
+            self.rxs_codes_list = np.expand_dims(np.array(self.rxs_codes_list), axis=1)
+            sentenc_embeds_np = np.concatenate([self.rxs_codes_list, sentences_embeddings], axis=1)
+            sentenc_embeds_df = pd.DataFrame(sentenc_embeds_np)
+            sentenc_embeds_df.columns = headers_list
+            sentenc_embeds_df['rx_code'] = sentenc_embeds_df['rx_code'].astype(int)
 
         return headers_list, sentenc_embeds_df
 
@@ -253,7 +255,9 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
                     current_image_features_df_rows = imaging_data_df.query("image_name=='%s'"%current_image_name)
                     current_image_features = current_image_features_df_rows.values[0][1:].tolist()
                     current_patient_clinical_data = current_rx_info.values[0][3:]
-                    text_reports_features_list = text_reports_features_df.query('rx_code==%s'%current_rx_code).values[0, 1:].tolist()
+                    text_reports_features_list = []
+                    if (not text_reports_features_df.empty):
+                        text_reports_features_list = text_reports_features_df.query('rx_code==%s'%current_rx_code).values[0, 1:].tolist()
                     current_merged_features_list = current_image_features + text_reports_features_list + current_patient_clinical_data.tolist()
                     global_merged_features_list.append(current_merged_features_list)
                 else:
@@ -467,7 +471,7 @@ class Build_Dataset_DPN_Model_Only_Hospitalized(Build_Dataset_Only_Hospitalized)
     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
                                 masks_dataset_path, input_table_file, associations_file, \
                                     output_path, text_reports_embeds_method_str, device, layer):
-        chosen_approach = 'DPN_Deep_Features_Model'
+        chosen_approach = 'DPN_TIMM_Deep_Features_Model'
         headers_list, features_df = \
           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
                                     masks_dataset_path, input_table_file, associations_file, output_path, \
@@ -486,7 +490,45 @@ class Build_Dataset_DPN_Model_Hospitalized_And_Urgencies(Build_Dataset_Hospitali
     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
                                 masks_dataset_path, input_table_file, associations_file, \
                                     output_path, text_reports_embeds_method_str, device, layer):
-        chosen_approach = 'DPN_Deep_Features_Model'
+        chosen_approach = 'DPN_TIMM_Deep_Features_Model'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
+
+        return headers_list, features_df
+
+class Build_Dataset_DeiT_Model_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
+        chosen_approach = 'DeiT_Transformer_Model'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
+
+        return headers_list, features_df
+
+class Build_Dataset_DeiT_Model_Hospitalized_And_Urgencies(Build_Dataset_Hospitalized_And_Urgencies):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
+        chosen_approach = 'DeiT_Transformer_Model'
         headers_list, features_df = \
           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
                                     masks_dataset_path, input_table_file, associations_file, output_path, \
@@ -531,3 +573,79 @@ class Build_Dataset_Mixed_Vision_Transformer_Hospitalized_And_Urgencies(Build_Da
                                         device, layer, text_reports_embeds_method_str)
 
         return headers_list, features_df
+
+class Build_Dataset_VGG_16_Model_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
+        chosen_approach = 'VGG_16_Deep_Features_Model'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
+
+        return headers_list, features_df
+
+class Build_Dataset_VGG_16_Model_Hospitalized_And_Urgencies(Build_Dataset_Hospitalized_And_Urgencies):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def check_dataset_statistics(self):
+        pass
+
+    def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+                                masks_dataset_path, input_table_file, associations_file, \
+                                    output_path, text_reports_embeds_method_str, device, layer):
+        chosen_approach = 'VGG_16_Deep_Features_Model'
+        headers_list, features_df = \
+          super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+                                    masks_dataset_path, input_table_file, associations_file, output_path, \
+                                        device, layer, text_reports_embeds_method_str)
+
+        return headers_list, features_df
+
+# class Build_Dataset_Text_Embeddings_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
+#
+#     def __init__(self, **kwargs):
+#         pass
+#
+#     def check_dataset_statistics(self):
+#         pass
+#
+#     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+#                                 masks_dataset_path, input_table_file, associations_file, \
+#                                     output_path, text_reports_embeds_method_str, device, layer):
+#         chosen_approach = 'No_Deep_Features_Model'
+#         headers_list, features_df = \
+#           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+#                                     masks_dataset_path, input_table_file, associations_file, output_path, \
+#                                         device, layer, text_reports_embeds_method_str)
+#
+#         return headers_list, features_df
+#
+# class Build_Dataset_Text_Embeddings_Hospitalized_And_Urgencies(Build_Dataset_Hospitalized_And_Urgencies):
+#
+#     def __init__(self, **kwargs):
+#         pass
+#
+#     def check_dataset_statistics(self):
+#         pass
+#
+#     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
+#                                 masks_dataset_path, input_table_file, associations_file, \
+#                                     output_path, text_reports_embeds_method_str, device, layer):
+#         chosen_approach = 'No_Deep_Features_Model'
+#         headers_list, features_df = \
+#           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
+#                                     masks_dataset_path, input_table_file, associations_file, output_path, \
+#                                         device, layer, text_reports_embeds_method_str)
+#
+#         return headers_list, features_df

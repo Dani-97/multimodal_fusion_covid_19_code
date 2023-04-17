@@ -9,7 +9,7 @@ def main():
     for deep_features_model_aux in deep_features_models_list:
         for current_chosen_cohort_aux in chosen_cohorts_list:
             for current_layer_aux in layers_list:
-                current_output_path_aux = '../built_dataset/%s_%s%s.csv'%(current_chosen_cohort_aux.lower(), deep_features_model_aux.lower(), current_layer_aux)
+                current_output_path_aux = '../built_dataset/%s_%s%s_LaBSE.csv'%(current_chosen_cohort_aux.lower(), deep_features_model_aux.lower(), current_layer_aux)
                 current_approach_aux = deep_features_model_aux + current_chosen_cohort_aux
 	
                 str_to_execute = 'python3 build_dataset_with_imaging_features.py '
@@ -21,6 +21,7 @@ def main():
                 str_to_execute += ('--output_path' + ' ' + current_output_path_aux + ' ')
                 str_to_execute += ('--device' + ' ' + 'CUDA' + ' ')
                 str_to_execute += ('--layer' + ' ' + current_layer_aux + ' ')
+                str_to_execute += ('--text_reports_embeds_method' + ' ' + 'LaBSE' + ' ')
 
                 print('Executing %s...'%str_to_execute)
                 os.system(str_to_execute)

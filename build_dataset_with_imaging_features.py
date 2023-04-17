@@ -23,13 +23,21 @@ def main():
     parser.add_argument("--associations_file", required=True, \
         help="Path to the file with the associations between an image and its code in the input table")
     parser.add_argument('--approach', type=str, required=True, \
-      choices=['Mixed_Vision_Transformer_Only_Hospitalized', 'Mixed_Vision_Transformer_Hospitalized_And_Urgencies', \
+      choices=['VGG_16_Model_Only_Hospitalized', 'VGG_16_Model_Hospitalized_And_Urgencies', \
+               'DeiT_Model_Only_Hospitalized', 'DeiT_Model_Hospitalized_And_Urgencies', \
                'DPN_Model_Only_Hospitalized', 'DPN_Model_Hospitalized_And_Urgencies'], \
                                           help='This specifies the selected approach')
+    ''' The commented version includes the options to obtain imaging features from the mixed vision
+    transformer and the dpn. Useful to uncomment if necessary. '''
+    # parser.add_argument('--approach', type=str, required=True, \
+    #   choices=['Mixed_Vision_Transformer_Only_Hospitalized', 'Mixed_Vision_Transformer_Hospitalized_And_Urgencies', \
+    #            'DPN_Model_Only_Hospitalized', 'DPN_Model_Hospitalized_And_Urgencies', \
+    #            'VGG_16_Model_Only_Hospitalized', 'VGG_16_Model_Hospitalized_And_Urgencies'], \
+    #                                       help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', \
                                               required=True)
-    parser.add_argument("--layer", type=str, help="Name of the autoencoder architecture to use if deep features were chosen", \
-                         choices=['layer1', 'layer2', 'layer3', 'layer4', 'layer5', 'all'], required=True)
+    parser.add_argument("--layer", type=str, help="Name of the layer to select from the model of deep features", \
+                         choices=['layer_fc6', 'layer_fc7', 'layer_fc8', 'all'], required=True)
     parser.add_argument("--device", help="Select CPU or GPU", required=True, \
                         choices=['CPU', 'CUDA'])
     parser.add_argument("--text_reports_embeds_method", type=str, choices=['No', 'LaBSE'], required=True, \
