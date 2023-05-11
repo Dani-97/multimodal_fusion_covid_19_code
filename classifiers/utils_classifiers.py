@@ -6,6 +6,8 @@ from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, auc
+from sklearn.metrics import precision_recall_curve
+import sys
 from xgboost import XGBClassifier
 
 # This is the parent of every classifier models that are going to be
@@ -23,6 +25,40 @@ class Super_Classifier_Class():
                                  self.classifier.predict_proba(input_data)
 
         return classifier_output
+
+    def show_training_metrics(self, metrics_values, metrics_file_path, nofsplit):
+        tn, fp, fn, tp = metrics_values['confusion_matrix'].ravel()
+
+        original_stdout = sys.stdout
+        if (nofsplit>0):
+            metrics_file_mode = 'a'
+        else:
+            metrics_file_mode = 'w'
+
+        metrics_file = open(metrics_file_path, metrics_file_mode)
+        sys.stdout = metrics_file
+        print('#### Training performance report (split number %d) ####'%nofsplit)
+        print('=================')
+        print('Confusion matrix')
+        print('[[%d \t %d\n  %d \t %d]]'%(tn, fp, fn, tp))
+        print('=================')
+        print('AUC-ROC = %.4f'%metrics_values['auc_roc'])
+        print('=================')
+        print('AUC-PR = %.4f'%metrics_values['auc_pr'])
+        print('=================')
+        print('Accuracy = %.2f'%(metrics_values['accuracy']*100))
+        print('=================')
+        print('F1-Score = %.2f'%(metrics_values['f1_score']*100))
+        print('=================')
+        print('Precision = %.2f'%(metrics_values['precision']*100))
+        print('=================')
+        print('Recall = %.2f'%(metrics_values['recall']*100))
+        print('=================')
+        print('Specificity = %.2f'%(metrics_values['specificity']*100))
+        print('=================')
+        print('')
+        sys.stdout = original_stdout
+        metrics_file.close()
 
     # This function receives 3 arguments: "predicted" which is the output
     # returned by the model in form of label (i.e., already thresholded)
@@ -44,12 +80,16 @@ class Super_Classifier_Class():
         f1_score = 2 * ((precision * recall)/(precision + recall))
         auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 1])
 
+        precision_list, recall_list, _ = precision_recall_curve(target, probabilities[:, 1])
+        auc_pr = auc(recall_list, precision_list)
+
         metrics_values['accuracy'] = accuracy
         metrics_values['f1_score'] = f1_score
         metrics_values['precision'] = precision
         metrics_values['specificity'] = specificity
         metrics_values['recall'] = recall
         metrics_values['auc_roc'] = auc_roc
+        metrics_values['auc_pr'] = auc_pr
         metrics_values['confusion_matrix'] = cm
 
         return metrics_values
@@ -98,6 +138,7 @@ class Super_Classifier_Class():
         specificity_values_list = []
         recall_values_list = []
         auc_roc_values_list = []
+        auc_pr_values_list = []
 
         # Reading the performance metrics from file.
         with open(csv_log_file_path, 'r') as csv_file:
@@ -116,6 +157,7 @@ class Super_Classifier_Class():
                     specificity_values_list.append(row_aux[4])
                     recall_values_list.append(row_aux[5])
                     auc_roc_values_list.append(row_aux[6])
+                    auc_pr_values_list.append(row_aux[7])
 
                 if ('performance_metrics_values' in row_aux):
                     reference_header_found+=1
@@ -126,6 +168,7 @@ class Super_Classifier_Class():
         specificity_values_list = np.array(specificity_values_list).astype(np.float64)
         recall_values_list = np.array(recall_values_list).astype(np.float64)
         auc_roc_values_list = np.array(auc_roc_values_list).astype(np.float64)
+        auc_pr_values_list = np.array(auc_pr_values_list).astype(np.float64)
 
         accuracy_summary = np.mean(accuracy_values_list), np.std(accuracy_values_list)
         f1_score_summary = np.mean(f1_score_values_list), np.std(f1_score_values_list)
@@ -133,6 +176,7 @@ class Super_Classifier_Class():
         specificity_summary = np.mean(specificity_values_list), np.std(specificity_values_list)
         recall_summary = np.mean(recall_values_list), np.std(recall_values_list)
         auc_roc_summary = np.mean(auc_roc_values_list), np.std(auc_roc_values_list)
+        auc_pr_summary = np.mean(auc_pr_values_list), np.std(auc_pr_values_list)
 
         # Writing the performance metrics summary (mean and standard deviation)
         # in csv file.
@@ -145,7 +189,7 @@ class Super_Classifier_Class():
             for it in range(0, 2):
                 csv_writer.writerow([summary_headers[it], accuracy_summary[it], f1_score_summary[it], \
                      precision_summary[it], specificity_summary[it], recall_summary[it], \
-                         auc_roc_summary[it]])
+                         auc_roc_summary[it], auc_pr_summary[it]])
 
     def save_model(self, filename):
         pickle.dump(self.classifier, open(filename, 'wb'))
@@ -163,7 +207,8 @@ class SVM_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an SVM classifier')
-        self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced')
+        # self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced')
+        self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced', gamma='auto')
 
     # The rest of the functions are inherited from the super class.
 
@@ -199,6 +244,7 @@ class XGBoost_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an XGBoost instance')
-        self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1)
+        # self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1)
+        self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1, max_depth=2, gamma=10)
 
     # The rest of the functions are inherited from the super class.

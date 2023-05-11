@@ -83,9 +83,9 @@ class Holdout_Split(Super_Splitting_Class):
         self.seed = kwargs['seed']
         print('++++ The dataset will be splitted in a Holdout fashion')
         print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
-        
+
         if (self.seed!=None):
-            print('++++ The datset will be splitted considering the manual seed %d.'%self.seed)
+            print('++++ The dataset will be splitted considering the manual seed %d.'%self.seed)
         else:
             print('++++ No seed was chosen for the random splitting of the dataset.')
 

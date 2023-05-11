@@ -3,7 +3,7 @@ import os
 os.chdir('../')
 input_built_dataset_root_dir = '../built_dataset_dpn'
 datasets_names_list = os.listdir(input_built_dataset_root_dir)
-models_list = ['SVM_Classifier', 'XGBoost_Classifier']
+models_list = ['SVM_Classifier', 'XGBoost_Classifier', 'kNN_Classifier', 'MLP_Classifier', 'DT_Classifier']
 feature_retrieval_methods_list = ['MutualInformation']
 nof_features_list = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
 

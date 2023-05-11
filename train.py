@@ -23,6 +23,7 @@ class UniversalFactory():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--logs_file_path", help="Path to the CSV file where the logs will be stored", required=True)
+    parser.add_argument("--experiment_name", help="Representative name of the experiment (for example, only_hospitalized or hospitalized_and_urgencies)", required=True)
     parser.add_argument("--model", help="Choose the model (SVM, kNN or whatever, that can be a classifier or a regressor)", \
                             choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'MLP_Classifier', 'XGBoost_Classifier', \
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
@@ -78,7 +79,7 @@ def main():
     # These lines execute the preprocessing step in case one was selected.
     kwargs = {}
     preprocessing = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
-    input_data = preprocessing.execute_preprocessing(input_data.astype(np.float64))
+    input_data, attrs_headers = preprocessing.execute_preprocessing(input_data.astype(np.float64), attrs_headers)
 
     # The input_data variable is overwritten with the data obtained after the
     # feature selection. If the user decided not to use feature selection, then
@@ -129,17 +130,26 @@ def main():
         output_test_subset = output_test_subset.astype(np.float64)
 
         model.train(input_train_subset, output_train_subset)
-        # The function returns the predicted values.
+        # Obtain metrics for training.
+        model_training_output_pred = model.test(input_train_subset)
+        training_metrics_values = model.model_metrics(model_training_output_pred, output_train_subset)
+
+        training_metrics_file_path = os.path.dirname(args.logs_file_path) + '/' + args.experiment_name + \
+                             '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
+                                   args.feature_retrieval + '_' + args.balancing + '_training_metrics.txt'
+        model.show_training_metrics(training_metrics_values, training_metrics_file_path, it)
+
+        # Obtain metrics for test.
         model_output_pred = model.test(input_test_subset)
         metrics_values = model.model_metrics(model_output_pred, output_test_subset)
 
-        model_filename = args.model + '_' + str(args.noftopfeatures) + '_' + \
+        model_filename = args.experiment_name + '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
                            args.feature_retrieval + '_' + args.balancing + '_model'
         model_file_full_path = \
             '%s/%s.pkl'%(str(Path(args.logs_file_path).parent), model_filename)
         model.save_model(model_file_full_path)
 
-        roc_curve_filename = args.model + '_' + str(args.noftopfeatures) + '_' + \
+        roc_curve_filename = args.experiment_name + '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
                            args.feature_retrieval + '_' + args.balancing + '_roc_curve'
         roc_curve_file_full_path = \
             '%s/%s.npy'%(str(Path(args.logs_file_path).parent), roc_curve_filename)

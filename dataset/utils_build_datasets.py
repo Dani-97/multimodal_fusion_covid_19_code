@@ -426,40 +426,6 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset_Without_Patients
 
         return self.df_unique_values.columns, self.df_unique_values
 
-# class Build_Dataset_Debugging_Radiomics_Features(Build_Dataset_Only_Hospitalized):
-#
-#     def __init__(self, **kwargs):
-#         pass
-#
-#     def check_dataset_statistics(self):
-#         pass
-#
-#     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
-#                                 masks_dataset_path, input_table_file, associations_file, output_path, device):
-#         chosen_approach = 'Radiomics_Features'
-#         headers_list, features_df = \
-#           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
-#                                     masks_dataset_path, input_table_file, associations_file, output_path, device)
-#
-#         return headers_list, features_df
-
-# class Build_Dataset_AlexNet_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
-#
-#     def __init__(self, **kwargs):
-#         pass
-#
-#     def check_dataset_statistics(self):
-#         pass
-#
-#     def build_dataset_with_imaging_data(self, headers_file, input_dataset_path, \
-#                                 masks_dataset_path, input_table_file, associations_file, output_path, device):
-#         chosen_approach = 'AlexNet_Deep_Features_Model'
-#         headers_list, features_df = \
-#           super().__build_dataset_with_imaging_data_aux__(chosen_approach, headers_file, input_dataset_path, \
-#                                     masks_dataset_path, input_table_file, associations_file, output_path, device)
-#
-#         return headers_list, features_df
-
 class Build_Dataset_DPN_Model_Only_Hospitalized(Build_Dataset_Only_Hospitalized):
 
     def __init__(self, **kwargs):
