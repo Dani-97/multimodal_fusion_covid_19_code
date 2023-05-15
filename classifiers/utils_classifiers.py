@@ -5,7 +5,7 @@ import pickle
 from sklearn import svm, tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, auc
+from sklearn.metrics import confusion_matrix, auc
 from sklearn.metrics import precision_recall_curve
 import sys
 from xgboost import XGBClassifier
@@ -16,6 +16,65 @@ class Super_Classifier_Class():
 
     def __init__(self, **kwargs):
         pass
+
+    def __get_optimal_point__(self, y_test, probabilities, partitions=100):
+        sorted_probabilities_idxs = np.argsort(probabilities)[::-1]
+        sorted_probabilities = probabilities[sorted_probabilities_idxs]
+        sorted_y_test = y_test[sorted_probabilities_idxs]
+        roc_curve = []
+        thresholds = []
+        best_balanced_accuracy = 0.0
+        for it in range(partitions + 1):
+            thresholds.append(it/partitions)
+            threshold_vector = np.greater_equal(sorted_probabilities, it/partitions).astype(int)
+            true_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 1)
+            true_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 0)
+            false_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 0)
+            false_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 1)
+
+            fpr = false_positive.sum()/(false_positive.sum() + true_negative.sum())
+            tpr = true_positive.sum()/(true_positive.sum() + false_negative.sum())
+
+            roc_curve.append([fpr, tpr])
+            balanced_accuracy = np.mean([1-fpr, tpr])
+            if (balanced_accuracy>=best_balanced_accuracy):
+                best_balanced_accuracy = balanced_accuracy
+                best_fpr = fpr
+                best_tpr = tpr
+                best_threshold = it/partitions
+
+        return best_fpr, best_tpr, best_threshold
+
+    def __custom_roc_curve__(self, y_test, probabilities, partitions=100):
+        sorted_probabilities_idxs = np.argsort(probabilities)[::-1]
+        sorted_probabilities = probabilities[sorted_probabilities_idxs]
+        sorted_y_test = y_test[sorted_probabilities_idxs]
+        roc_curve = []
+        thresholds = []
+        for it in range(partitions + 1):
+            thresholds.append(it/partitions)
+            threshold_vector = np.greater_equal(sorted_probabilities, it/partitions).astype(int)
+            true_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 1)
+            true_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 0)
+            false_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 0)
+            false_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 1)
+
+            fpr = false_positive.sum()/(false_positive.sum() + true_negative.sum())
+            tpr = true_positive.sum()/(true_positive.sum() + false_negative.sum())
+
+            roc_curve.append([fpr, tpr])
+
+        roc_curve = np.array(roc_curve)
+        fpr, tpr = roc_curve[:, 0], roc_curve[:, 1]
+
+        return fpr, tpr, thresholds
+
+    def __custom_auc_function__(self, fpr, tpr, thresholds):
+        rectangle_auc = 0
+        for it in range(0, len(thresholds)-1):
+            rectangle_auc = rectangle_auc + (fpr[it] - fpr[it + 1]) * tpr[it]
+
+        return rectangle_auc
 
     def train(self, input_data, output_data):
         self.classifier.fit(input_data, output_data)
@@ -78,7 +137,11 @@ class Super_Classifier_Class():
         precision = tp / (tp + fp)
         specificity = tn / (tn + fp)
         f1_score = 2 * ((precision * recall)/(precision + recall))
-        auc_roc = roc_auc_score(y_true=target, y_score=probabilities[:, 1])
+
+        # fpr, tpr, thresholds = roc_curve(y_true=target, y_score=probabilities[:, 1])
+        fpr, tpr, thresholds = self.__custom_roc_curve__(target, probabilities[:, 1])
+        best_fpr, best_tpr, best_threshold = self.__get_optimal_point__(target, probabilities[:, 1])
+        auc_roc = self.__custom_auc_function__(fpr, tpr, thresholds)
 
         precision_list, recall_list, _ = precision_recall_curve(target, probabilities[:, 1])
         auc_pr = auc(recall_list, precision_list)
@@ -93,12 +156,6 @@ class Super_Classifier_Class():
         metrics_values['confusion_matrix'] = cm
 
         return metrics_values
-
-    def save_roc_curve(self, target, predicted, output_filename):
-        fpr, tpr, _ = roc_curve(target, predicted[1][:, 1])
-        roc_auc_value = auc(fpr, tpr)
-
-        np.save(output_filename, (fpr, tpr))
 
     # This function adds the headers to the logs csv file.
     def add_headers_to_csv_file(self, output_filename, \

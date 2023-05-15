@@ -30,8 +30,8 @@ def main():
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
                             choices=['No', 'Standardization', 'Normalization'], required=True)
-    parser.add_argument("--manual_seed", type=int, \
-                            help="If specified, the dataset splitting will be done considering this seed.")
+    parser.add_argument("--manual_seeds", type=int, nargs='+', \
+                            help="If specified, the dataset splitting will be done considering these seeds.")
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
                                               choices=['No', 'Oversampling', 'Undersampling', 'SMOTE', 'ADASYN'])
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
                                               action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
-                                              choices=['Holdout', 'Cross_Validation'], required=True)
+                                              choices=['Holdout', 'Balanced_Holdout'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select from the ranking that was obtained with the feature selection algorithm", type=int)
     parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
     parser.add_argument('--nofsplits', help="Number of different holdouts to be performed or number of folds of the cross validation", type=int, required=True)
@@ -61,11 +61,14 @@ def main():
     if ((args.model.find('Regressor')!=-1) and (args.balancing!='No')):
         print('++++ ERROR: if you choose a regression model, you cannot use any kind of balancing')
         exit(-1)
+    if ((args.manual_seeds is not None) and (len(args.manual_seeds)!=args.nofsplits)):
+        print('++++ ERROR: if specified, the number of manual seeds must be the same as --nofsplits')
+        exit(-1)
 
     universal_factory = UniversalFactory()
 
     # Creating the splitting object with the universal factory.
-    kwargs = {'test_size': args.test_size, 'noffolds': args.nofsplits, 'seed': args.manual_seed}
+    kwargs = {'test_size': args.test_size, 'noffolds': args.nofsplits}
     splitting = universal_factory.create_object(globals(), args.splitting + '_Split', kwargs)
     # Retrieving the feature selection method with the universal factory.
     kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
@@ -106,7 +109,7 @@ def main():
         # (for example, in the case of the holdout).
         splitting.set_partition(it)
         # Split into training and test set
-        subsets = splitting.split(input_data, output_data)
+        subsets = splitting.split(input_data, output_data, args.manual_seeds[it])
         input_train_subset, input_test_subset, \
                              output_train_subset, output_test_subset = subsets
         output_train_subset = output_train_subset.astype(float).astype(int).astype(str)
@@ -153,7 +156,6 @@ def main():
                            args.feature_retrieval + '_' + args.balancing + '_roc_curve'
         roc_curve_file_full_path = \
             '%s/%s.npy'%(str(Path(args.logs_file_path).parent), roc_curve_filename)
-        model.save_roc_curve(output_test_subset, model_output_pred, roc_curve_file_full_path)
         headers_list, metrics_values_list = convert_metrics_dict_to_list(metrics_values)
         if (it==0):
             model.add_headers_to_csv_file(args.logs_file_path, headers_list)

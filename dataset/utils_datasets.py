@@ -73,27 +73,28 @@ class Super_Splitting_Class():
     def set_partition(self, nofpartition):
         pass
 
-    def split(self, input_data, output_data):
+    def split(self, input_data, output_data, seed=-1):
         pass
 
 class Holdout_Split(Super_Splitting_Class):
 
     def __init__(self, **kwargs):
         self.test_size = float(kwargs['test_size'])
-        self.seed = kwargs['seed']
         print('++++ The dataset will be splitted in a Holdout fashion')
         print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
-
-        if (self.seed!=None):
-            print('++++ The dataset will be splitted considering the manual seed %d.'%self.seed)
-        else:
-            print('++++ No seed was chosen for the random splitting of the dataset.')
 
     # The method set_partition will not do anything for this splitting method.
 
     # input_data variable refers to the data that will be used as input of
     # the classifier and output refers to the labels.
-    def split(self, input_data, output_data):
+    def split(self, input_data, output_data, seed=-1):
+        if (seed==-1):
+            self.seed = None
+            print('++++ No seed was chosen for the random splitting of the dataset.')
+        else:
+            self.seed = seed
+            print('++++ The dataset will be splitted considering the manual seed %d.'%self.seed)
+
         splitting_subsets = train_test_split(input_data, output_data, \
                                    test_size=self.test_size, shuffle=True, random_state=self.seed)
 
@@ -101,43 +102,56 @@ class Holdout_Split(Super_Splitting_Class):
 
     # The rest of the methods are inherited from the parent class.
 
-class Cross_Validation_Split(Super_Splitting_Class):
+class Balanced_Holdout_Split(Super_Splitting_Class):
 
     def __init__(self, **kwargs):
-        self.noffolds = int(kwargs['noffolds'])
-        self.seed = kwargs['seed']
-        print('++++ The dataset will be splitted in a Cross Validation fashion with %d folds'%\
-                self.noffolds)
-        if (self.seed!=None):
-            print('++++ The datset will be splitted considering the manual seed %d.'%self.seed)
-        else:
+        self.test_size = float(kwargs['test_size'])
+        print('++++ The dataset will be splitted in a Balanced Holdout fashion')
+        print('---- Test size is %.2f. Therefore, train size is %.2f'%(self.test_size, 1.0-self.test_size))
+
+    # The method set_partition will not do anything for this splitting method.
+
+    # input_data variable refers to the data that will be used as input of
+    # the classifier and output refers to the labels.
+    def split(self, input_data, output_data, seed=-1):
+        if (seed==-1):
+            self.seed = None
             print('++++ No seed was chosen for the random splitting of the dataset.')
+        else:
+            self.seed = seed
+            print('++++ The dataset will be splitted considering the manual seed %d.'%self.seed)
 
-        self.splitting_module = KFold(n_splits=self.noffolds, shuffle=True, random_state=self.seed)
-        self.partitions = None
+        negative_samples = np.where(output_data.astype(float).astype(int)==0)[0]
+        nof_negative_samples = len(negative_samples)
+        positive_samples = np.where(output_data.astype(float).astype(int)==1)[0]
+        nof_positive_samples = len(positive_samples)
 
-    def set_partition(self, nofpartition):
-        self.nofpartition = nofpartition
+        nof_samples_per_class_dist = np.array([nof_negative_samples, nof_positive_samples])
+        minority_class = np.argmin(nof_samples_per_class_dist)
+        min_nof_class_samples = nof_samples_per_class_dist[minority_class]
 
-    def split(self, input_data, output_data):
-        # The first time this function is called, the partitions of the input
-        # dataset are made. The next times the function is called, the
-        # already made set of partitions is used.
-        if (self.partitions==None):
-            self.partitions = []
-            joint_subsets_generator = self.splitting_module.split(input_data)
-            for train_subset, test_subset in joint_subsets_generator:
-                self.partitions.append((train_subset, test_subset))
+        balanced_positive_samples_input_data = input_data[positive_samples[:min_nof_class_samples], :]
+        excessive_positive_samples_input_data = input_data[positive_samples[min_nof_class_samples:], :]
+        balanced_positive_samples_output_data = output_data[positive_samples[:min_nof_class_samples]]
+        excessive_positive_samples_output_data = output_data[positive_samples[min_nof_class_samples:]]
 
-        current_train_folds = self.partitions[self.nofpartition][0]
-        current_test_fold = self.partitions[self.nofpartition][1]
+        balanced_negative_samples_input_data = input_data[negative_samples[:min_nof_class_samples], :]
+        excessive_negative_samples_input_data = input_data[negative_samples[min_nof_class_samples:], :]
+        balanced_negative_samples_output_data = output_data[negative_samples[:min_nof_class_samples]]
+        excessive_negative_samples_output_data = output_data[negative_samples[min_nof_class_samples:]]
 
-        input_train_subset = input_data[current_train_folds, :]
-        output_train_subset = output_data[current_train_folds]
-        input_test_subset = input_data[current_test_fold, :]
-        output_test_subset = output_data[current_test_fold]
+        balanced_input_data = np.concatenate([balanced_positive_samples_input_data, balanced_negative_samples_input_data])
+        balanced_output_data = np.concatenate([balanced_positive_samples_output_data, balanced_negative_samples_output_data])
 
-        splitting_subsets = input_train_subset, input_test_subset, \
-                                 output_train_subset, output_test_subset
+        splitting_subsets = train_test_split(balanced_input_data, balanced_output_data, \
+                                test_size=self.test_size, shuffle=True, random_state=self.seed, stratify=balanced_output_data)
+        input_train_subset, input_test_subset, output_train_subset, output_test_subset = splitting_subsets
+
+        input_train_subset = np.concatenate([input_train_subset, excessive_positive_samples_input_data, excessive_negative_samples_input_data])
+        output_train_subset = np.concatenate([output_train_subset, excessive_positive_samples_output_data, excessive_negative_samples_output_data])
+
+        splitting_subsets = input_train_subset, input_test_subset, output_train_subset, output_test_subset
 
         return splitting_subsets
+
+    # The rest of the methods are inherited from the parent class.
