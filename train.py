@@ -33,7 +33,9 @@ def main():
     parser.add_argument("--manual_seeds", type=int, nargs='+', \
                             help="If specified, the dataset splitting will be done considering these seeds.")
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
-                                              choices=['No', 'Oversampling', 'Undersampling', 'SMOTE', 'ADASYN'])
+                                              choices=['No', 'Oversampling', 'SMOTE'])
+    parser.add_argument("--csv_path_with_attrs_types", help="This determines the path to a CSV file that specifies if a variable is categorical or continuous.", required=True, \
+                                              type=str)
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
                                               choices=['No', 'PCA', 'VarianceThreshold', 'Fisher', 'MutualInformation'])
     parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
@@ -93,6 +95,10 @@ def main():
     # If the CSV logs file had previous content, then this function will remove
     # it.
     clear_csv_file(args.logs_file_path)
+    top_features_attrs_headers = feature_retrieval.get_ordered_top_features(attrs_headers, args.noftopfeatures)
+    top_features_categorical_attrs_headers, top_features_continuous_attrs_headers = \
+            feature_retrieval.get_ordered_categorical_and_continuous_top_features(attrs_headers, \
+                                                                   args.noftopfeatures, args.csv_path_with_attrs_types)
     # This function will store the report of the feature selection process if it
     # is available and if the user has decided to store it.
     if (args.store_features_selection_report):
@@ -119,8 +125,9 @@ def main():
         kwargs = {}
         balancing_module = \
                 universal_factory.create_object(globals(), args.balancing + '_Balancing', kwargs)
+        attrs_types_tuple = top_features_categorical_attrs_headers, top_features_continuous_attrs_headers
         input_train_subset, output_train_subset = \
-                balancing_module.execute_balancing(input_train_subset, output_train_subset)
+                balancing_module.execute_balancing(input_train_subset, output_train_subset, attrs_types_tuple)
 
         # Creating the model with the universal factory.
         kwargs = {'n_neighbors': args.n_neighbors}

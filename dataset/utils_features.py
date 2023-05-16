@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 import os
+import pandas as pd
 from skfeature.utility import construct_W
 
 def plot_2D_distribution(input_data, output_data):
@@ -95,6 +96,32 @@ class Super_Feature_Retrieval():
 
         return filtered_features_list
 
+    def get_ordered_top_features(self, attrs_headers, noftopfeatures):
+        ordered_top_features = np.array(attrs_headers)[self.ordered_features_idxs[:noftopfeatures]]
+
+        return ordered_top_features
+
+    def get_ordered_categorical_and_continuous_top_features(self, attrs_headers, noftopfeatures, csv_path_with_attrs_types):
+
+        def get_attrs_types_array(attrs_types_df, ordered_top_features):
+            types_list = []
+            for current_top_feature_aux in ordered_top_features:
+                current_type_aux = attrs_types_df.query("name=='%s'"%current_top_feature_aux)['type'].values.tolist()
+                if (len(current_type_aux)>0):
+                    types_list+=current_type_aux
+                else:
+                    types_list+=['continuous']
+
+            return types_list
+
+        ordered_top_features = self.get_ordered_top_features(attrs_headers, noftopfeatures)
+        attrs_types_df = pd.read_csv(csv_path_with_attrs_types, delimiter=',')
+
+        types_list = get_attrs_types_array(attrs_types_df, ordered_top_features)
+        categorical_attrs_idxs = np.where(np.array(types_list)=='categorical')[0]
+        continuous_attrs_idxs = np.where(np.array(types_list)=='continuous')[0]
+
+        return categorical_attrs_idxs, continuous_attrs_idxs
 
 # An object of this class will be instantiated if no feature selection was
 # chosen.

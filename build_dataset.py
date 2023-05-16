@@ -26,6 +26,8 @@ def main():
                  help='This specifies the selected approach')
     parser.add_argument('--output_path', type=str, required=True,
                             help='Path where the CSV files of the dataset will be stored')
+    parser.add_argument('--include_patients_ids', action='store_true',
+                            help='If specified, then the patients ids will be included')
     args = parser.parse_args()
 
     universal_factory = UniversalFactory()
@@ -35,8 +37,13 @@ def main():
                                       'Build_Dataset_' + args.approach, kwargs)
 
     input_filename = args.input_filename
-    dataset_headers, dataset_rows = \
-        selected_approach.build_dataset(input_filename, args.headers_file)
+    if (args.include_patients_ids):
+        dataset_headers, dataset_rows = \
+            selected_approach.build_dataset_with_patients_ids(input_filename, args.headers_file)
+    else:
+        dataset_headers, dataset_rows = \
+            selected_approach.build_dataset(input_filename, args.headers_file)
+
     selected_approach.check_dataset_statistics()
     selected_approach.store_dataset_in_csv_file(dataset_rows, args.output_path)
 

@@ -1,19 +1,29 @@
-from imblearn.over_sampling import SMOTE, ADASYN
+from imblearn.over_sampling import SMOTENC
 import numpy as np
 
-class No_Balancing():
+# This acts as an abstract class.
+class Super_Balancing():
+
+    def __init__(self):
+        pass
+
+    def execute_balancing(self, input_data, output_data, attrs_types_tuple):
+        raise NotImplementedError("++++ ERROR: The execute_balancing method has not been implemented!")
+
+class No_Balancing(Super_Balancing):
 
     def __init__(self):
         pass
 
     # As this class does not apply any kind of preprocessing, this method
     # will return the input_data without any kind of modification.
-    def execute_balancing(self, input_data, output_data):
+    # NOTE: attrs_types_tuple can be an empty tuple.
+    def execute_balancing(self, input_data, output_data, attrs_types_tuple):
         print('**** No balancing will be applied to the training set')
 
         return input_data, output_data
 
-class Oversampling_Balancing():
+class Oversampling_Balancing(Super_Balancing):
 
     def __init__(self):
         pass
@@ -30,7 +40,8 @@ class Oversampling_Balancing():
 
         return list_of_random_indexes
 
-    def execute_balancing(self, input_data, output_data):
+    # NOTE: attrs_types_tuple can be an empty tuple.
+    def execute_balancing(self, input_data, output_data, attrs_types_tuple):
         print('**** The training subset is being oversampled...')
 
         output_data_shape = np.shape(output_data)
@@ -75,79 +86,22 @@ class Oversampling_Balancing():
 
         return oversampled_input_data, oversampled_output_data
 
-class Undersampling_Balancing():
+class SMOTE_Balancing(Super_Balancing):
 
     def __init__(self):
         pass
 
-    def execute_balancing(self, input_data, output_data):
-        print('**** The training subset is being undersampled...')
-
-        output_data_shape = np.shape(output_data)
-
-        samples_class0_input_data = input_data[output_data=='0', :]
-        samples_class1_input_data = input_data[output_data=='1', :]
-
-        samples_class0_output_data = output_data[output_data=='0']
-        samples_class1_output_data = output_data[output_data=='1']
-
-        nofsamples_class0 = np.shape(samples_class0_input_data)[0]
-        nofsamples_class1 = np.shape(samples_class1_input_data)[0]
-        min_nofsamples = np.min(np.array([nofsamples_class0, nofsamples_class1]))
-
-        undersampled_input_data = \
-            np.concatenate((samples_class0_input_data[0:min_nofsamples, :], \
-                        samples_class1_input_data[0:min_nofsamples, :]), \
-                            axis=0)
-        undersampled_output_data = \
-            np.concatenate((samples_class0_output_data[0:min_nofsamples], \
-                        samples_class1_output_data[0:min_nofsamples]), \
-                            axis=0)
-        print('')
-        print('**** INFO: With the undersampling:')
-        print('Class 0 -> %d samples; Class 1 -> %d samples'\
-                        %(np.sum(undersampled_output_data=='0'), \
-                            np.sum(undersampled_output_data=='1')))
-        print('')
-
-        return undersampled_input_data, undersampled_output_data
-
-class SMOTE_Balancing():
-
-    def __init__(self):
-        pass
-
-    def execute_balancing(self, input_data, output_data):
+    def execute_balancing(self, input_data, output_data, attrs_types_tuple):
         print('**** The training subset is being oversampled with SMOTE...')
 
-        oversampling_obj = SMOTE()
+        top_features_categorical_attrs_headers, top_features_continuous_attrs_headers = attrs_types_tuple
+
+        oversampling_obj = SMOTENC(top_features_categorical_attrs_headers)
         transformed_data = oversampling_obj.fit_resample(input_data, output_data)
         transformed_input_data, transformed_output_data = transformed_data
 
         print('')
         print('**** INFO: With the oversampling of SMOTE:')
-        print('Class 0 -> %d samples; Class 1 -> %d samples'\
-                        %(np.sum(transformed_output_data=='0'), \
-                            np.sum(transformed_output_data=='1')))
-        print('')
-
-
-        return transformed_input_data, transformed_output_data
-
-class ADASYN_Balancing():
-
-    def __init__(self):
-        pass
-
-    def execute_balancing(self, input_data, output_data):
-        print('**** The training subset is being oversampled with ADASYN...')
-
-        oversampling_obj = ADASYN()
-        transformed_data = oversampling_obj.fit_resample(input_data, output_data)
-        transformed_input_data, transformed_output_data = transformed_data
-
-        print('')
-        print('**** INFO: With the oversampling of ADASYN:')
         print('Class 0 -> %d samples; Class 1 -> %d samples'\
                         %(np.sum(transformed_output_data=='0'), \
                             np.sum(transformed_output_data=='1')))
