@@ -185,6 +185,31 @@ class Super_Classifier_Class():
 
             csv_writer.writerow([repetition] + metrics_values_list)
 
+    # This function stores all the parameters related with the current experiment
+    # (experiment name, dataset, classifier, number of features...).
+    def store_experiment_parameters(self, args, output_filename, append=True):
+        args_dict = vars(args)
+        values_to_store_list = []
+        for key_aux in args_dict.keys():
+            if (args_dict[key_aux]==None):
+                value_aux = 'None'
+            else:
+                value_aux = args_dict[key_aux]
+            values_to_store_list.append([key_aux, value_aux])
+
+        if (append):
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        with open(output_filename, file_mode) as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+
+            csv_writer.writerow([])
+            csv_writer.writerow(['parameters'])
+            for current_value_aux in values_to_store_list:
+                csv_writer.writerow(current_value_aux)
+
     # This function reads the CSV file with the logs of the performance metrics
     # obtained in a certain experiment to compute the mean and the standard
     # deviation of the whole amount of repetitions.
@@ -253,6 +278,13 @@ class Super_Classifier_Class():
 
     def load_model(self, filename):
         self.classifier = pickle.load(open(filename, 'rb'))
+
+    def get_roc_curve(self, model_outputs, target):
+        predicted, probabilities = model_outputs
+        roc_curve = self.__custom_roc_curve__(target, probabilities[:, 1])
+        fpr, tpr, thresholds = roc_curve
+
+        return fpr, tpr, thresholds
 
     # This function must be reimplemented by those classifiers with
     # explainability. By default, it displays a message that shows that the

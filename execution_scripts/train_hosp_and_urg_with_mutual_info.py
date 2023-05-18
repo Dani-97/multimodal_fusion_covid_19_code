@@ -1,61 +1,49 @@
 import os
 from utils_scripts_train import execute_train
 
-os.chdir('../')
+def obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model):
+    experiments_to_execute_list = []
+    for noffeatures_aux in noffeatures_list:
+        logs_file_path = '../results/%s_%s_%d_features_%s.csv'%(cohorts,
+                     classifier_model, noffeatures_aux, deep_features_scenario)
+        current_exp_params = \
+            {'logs_file_path': logs_file_path,
+             'experiment_name': cohorts + '_' + deep_features_scenario,
+             'model': classifier_model,
+             'dataset_path': '../built_dataset/%s_%s.csv'%(cohorts, deep_features_scenario),
+             'preprocessing': 'Normalization',
+             'manual_seeds': '0 1 2 3 4',
+             'balancing': 'SMOTE',
+             'csv_path_with_attrs_types': '../original_dataset/attrs_headers_types.csv',
+             'feature_retrieval': 'MutualInformation',
+             'store_features_selection_report': 'store_true',
+             'splitting': 'Balanced_Holdout',
+             'noftopfeatures': '%d'%noffeatures_aux,
+             'nofsplits': '5',
+             'test_size': '0.2'}
+        experiments_to_execute_list.append(current_exp_params)
 
-noffeatures_list = list(range(1, 29))
-nofexperiments = len(noffeatures_list)
-logs_dir_path_list = ['../results/experiment_I/']*nofexperiments
-logs_file_name_list = ['dt_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
-model_list = ['DT_Classifier']*nofexperiments
-dataset_path_list = ['../built_dataset/experiment_I.csv']*nofexperiments
-balancing_list = ['Oversampling']*nofexperiments
-feature_retrieval_list = ['MutualInformation']*nofexperiments
-splitting_list = ['Holdout']*nofexperiments
-test_size_list = [0.2]*nofexperiments
-nofsplits_list = [5]*nofexperiments
-preprocessing_list = ['No']*nofexperiments
-store_features_selection_report_list = ['--store_features_selection_report']*nofexperiments
-n_neighbors_list = [5]*nofexperiments
+    return experiments_to_execute_list
 
-execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, \
-        logs_file_name_list, model_list, dataset_path_list, balancing_list, \
-            feature_retrieval_list, splitting_list, test_size_list, \
-                nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list)
+def main():
+    os.chdir('../')
 
-logs_file_name_list = ['xgboost_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
-model_list = ['XGBoost_Classifier']*nofexperiments
+    experiments_to_execute_list = []
 
-execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, \
-        logs_file_name_list, model_list, dataset_path_list, balancing_list, \
-            feature_retrieval_list, splitting_list, test_size_list, \
-                nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list)
+    noffeatures_list = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    cohorts = 'hospitalized_and_urgencies'
+    deep_features_scenario = 'vgg_16_model_layer_fc7'
+    classifier_model = 'SVM_Classifier'
 
-logs_file_name_list = ['kNN_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
-model_list = ['kNN_Classifier']*nofexperiments
+    experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model)
 
-execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, \
-        logs_file_name_list, model_list, dataset_path_list, balancing_list, \
-            feature_retrieval_list, splitting_list, test_size_list, \
-                nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list, n_neighbors_list)
+    noffeatures_list = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    cohorts = 'hospitalized_and_urgencies'
+    deep_features_scenario = 'vgg_16_model_layer_fc7'
+    classifier_model = 'XGBoost_Classifier'
 
-logs_file_name_list = ['mlp_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
-model_list = ['MLP_Classifier']*nofexperiments
+    experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model)
 
-execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, \
-        logs_file_name_list, model_list, dataset_path_list, balancing_list, \
-            feature_retrieval_list, splitting_list, test_size_list, \
-                nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list)
+    execute_train(experiments_to_execute_list)
 
-logs_file_name_list = ['svm_%s_feature_mutual_info_oversampling_results.csv']*nofexperiments
-model_list = ['SVM_Classifier']*nofexperiments
-
-execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, \
-        logs_file_name_list, model_list, dataset_path_list, balancing_list, \
-            feature_retrieval_list, splitting_list, test_size_list, \
-                nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list)
+main()

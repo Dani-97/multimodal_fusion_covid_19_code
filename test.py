@@ -1,5 +1,5 @@
 import argparse
-from main_train_test_code import Train_Class
+from main_train_test_code import Test_Class
 
 class UniversalFactory():
 
@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--model", help="Choose the model (SVM, kNN or whatever, that can be a classifier or a regressor)", \
                             choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'MLP_Classifier', 'XGBoost_Classifier', \
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
+    parser.add_argument("--model_path", help="The path to the model that with 'rep_0', 'rep_1', 'rep_2'...", type=str, required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
                             choices=['No', 'Standardization', 'Normalization'], required=True)
@@ -58,7 +59,7 @@ def main():
         print('++++ ERROR: if specified, the number of manual seeds must be the same as --nofsplits')
         exit(-1)
 
-    train_class_obj = Train_Class()
-    train_class_obj.execute_approach(args)
+    test_class_obj = Test_Class()
+    test_class_obj.execute_approach(args)
 
 main()

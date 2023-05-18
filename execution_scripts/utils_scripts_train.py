@@ -1,78 +1,36 @@
+import argparse
 import os
 
-def execute_train(noffeatures_list, nofexperiments, logs_dir_path_list, logs_file_name_list, model_list, \
-            dataset_path_list, balancing_list, feature_retrieval_list, splitting_list, \
-                test_size_list, nofsplits_list, preprocessing_list, \
-                    store_features_selection_report_list, n_neighbors_list=None):
+# If only_print is set to True, then the commands will not be executed, only
+# printed.
+# If only_run_first_command is set to True, then only the first command will be
+# executed. This is useful if the first command fails, as it stops the whole
+# running. Interesting for debugging purposes.
+def execute_train(experiments_list):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--only_print', action='store_true', \
+                   help='If specified, the commands will not be executed, only printed.' + \
+                        'This is very useful for debugging purposes.')
+    parser.add_argument('--only_run_first_command', action='store_true', \
+                   help='If specified, only the first command of the list will be ' + \
+                         'printed or executed. This is useful for debugging, as if ' + \
+                         'the first command fails, the execution does not continue ' + \
+                         'running')
+    args = parser.parse_args()
 
-    for it in range(0, nofexperiments):
-        if (len(str(logs_dir_path_list[it]).strip())!=0):
-            current_logs_file_path = ' --logs_file_path ' + str(logs_dir_path_list[it]) + logs_file_name_list[it]%str(noffeatures_list[it])
-        else:
-            current_logs_file_path = ''
-
-        if (len(str(model_list[it]).strip())!=0):
-            current_model = ' --model ' + str(model_list[it])
-        else:
-            current_model = ' '
-
-        if (len(str(dataset_path_list[it]).strip())!=0):
-            current_dataset_path = ' --dataset_path ' + str(dataset_path_list[it])
-        else:
-            current_dataset_path = ' '
-
-        if (len(str(balancing_list[it]).strip())!=0):
-            current_balancing = ' --balancing ' + str(balancing_list[it])
-        else:
-            current_balancing = ' '
-
-        if (len(str(feature_retrieval_list[it]).strip())!=0):
-            current_feature_retrieval = ' --feature_retrieval ' + str(feature_retrieval_list[it])
-        else:
-            current_feature_retrieval = ' '
-
-        if (len(str(splitting_list[it]).strip())!=0):
-            current_splitting = ' --splitting ' + str(splitting_list[it])
-        else:
-            current_splitting = ' '
-
-        if (len(str(test_size_list[it]).strip())!=0):
-            current_test_size = ' --test_size ' + str(test_size_list[it])
-        else:
-            current_test_size = ' '
-
-        if (len(str(nofsplits_list[it]).strip())!=0):
-            current_nofsplits = ' --nofsplits ' + str(nofsplits_list[it])
-        else:
-            current_nofsplits = ' '
-
-        if (noffeatures_list[it]=='all'):
-            current_noftopfeatures = ' '
-        else:
-            current_noftopfeatures = ' --noftopfeatures ' + str(noffeatures_list[it])
-
-        if (len(str(preprocessing_list[it]).strip())!=0):
-            current_preprocessing = ' --preprocessing ' + str(preprocessing_list[it])
-        else:
-            current_preprocessing = ' '
-
-        if (n_neighbors_list!=None):
-            current_n_neighbors = ' --n_neighbors ' + str(n_neighbors_list[it])
-        else:
-            current_n_neighbors = ''
-
-        if (len(str(store_features_selection_report_list[it]).strip())!=0):
-            current_store_features_selection_report = ' ' + str(store_features_selection_report_list[it])
-        else:
-            current_store_features_selection_report = ' '
-
-        command_to_execute = 'python3 train.py' + current_logs_file_path + \
-            current_model + current_dataset_path + current_balancing + \
-                current_feature_retrieval + current_splitting + current_test_size + \
-                    current_nofsplits + current_noftopfeatures + current_preprocessing + \
-                        current_n_neighbors + current_store_features_selection_report
+    if (args.only_run_first_command):
+        experiments_list = [experiments_list[0]]
+    for current_experiment_aux in experiments_list:
+        command_to_execute = 'python3 train.py' + ' '
+        for current_param_key_aux in current_experiment_aux.keys():
+            current_param_value_aux = current_experiment_aux[current_param_key_aux]
+            if (current_param_value_aux=='store_true'):
+                command_to_execute += '--%s'%current_param_key_aux + ' '
+            else:
+                command_to_execute += '--%s %s'%(current_param_key_aux, current_param_value_aux) + ' '
 
         print('\n##################################################################')
         print(' Executing command [%s]'%command_to_execute)
         print('##################################################################\n')
-        os.system(command_to_execute)
+        if (not args.only_print):
+            os.system(command_to_execute)
