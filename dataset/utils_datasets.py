@@ -43,8 +43,8 @@ class Super_Splitting_Class():
         file_data = np.array(file_data)
 
         file_data_shape = np.shape(file_data)
-        input_data = file_data[:, 0:file_data_shape[1]-1]
-        output_data = file_data[:, file_data_shape[1]-1]
+        input_data = file_data[:, 0:file_data_shape[1]-1].astype(np.float64)
+        output_data = file_data[:, file_data_shape[1]-1].astype(np.float64)
 
         return headers, input_data, output_data
 

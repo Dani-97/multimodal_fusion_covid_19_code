@@ -20,11 +20,13 @@ def main():
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
-                            choices=['No', 'Standardization', 'Normalization'], required=True)
+                            choices=['No', 'Normalization'], required=True)
     parser.add_argument("--manual_seeds", type=int, nargs='+', \
                             help="If specified, the dataset splitting will be done considering these seeds.")
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
-                                              choices=['No', 'Oversampling', 'SMOTE'])
+                                              choices=['No', 'Oversampling', 'SMOTE', 'Gaussian_Copula'])
+    parser.add_argument("--imputation", help="This decides the kind of approach to use for the imputation of missing values", required=True,
+                                              choices=['No_Imputation_Model', 'kNN_Values_Imputation_Model'])
     parser.add_argument("--csv_path_with_attrs_types", help="This determines the path to a CSV file that specifies if a variable is categorical or continuous.", required=True, \
                                               type=str)
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \

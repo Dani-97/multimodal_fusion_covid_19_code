@@ -290,6 +290,9 @@ class Super_Class_Build_Dataset_Without_Patients_Ids():
         imaging_data_columns, imaging_features_df = self.__get_images_features__(chosen_approach, clinical_data_df, \
                                     input_dataset_path, masks_dataset_path, selected_approach_obj, device, layer, include_image_name=True)
         imaging_features_df.columns = imaging_data_columns
+        # Removing the features whose values are all 0.
+        idxs_to_keep = np.where((imaging_features_df==0).sum()<len(imaging_features_df))[0]
+        imaging_features_df = imaging_features_df[imaging_features_df.columns[idxs_to_keep]]
 
         merged_features_columns, global_merged_features_df = \
             self.__associate_clinical_and_imaging_datasets__(associations_df, clinical_data_df, imaging_features_df, text_reports_features_df)

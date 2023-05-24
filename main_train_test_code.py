@@ -4,12 +4,15 @@ from regressors.utils_regressors import *
 from dataset.utils_balancing import *
 from dataset.utils_datasets import *
 from dataset.utils_features import *
+from dataset.utils_missing_values import *
 from dataset.utils_normalization import *
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from pathlib import Path
+from sklearn.metrics import auc
 from utils import convert_metrics_dict_to_list, clear_csv_file
+import warnings
 
 class UniversalFactory():
 
@@ -32,12 +35,33 @@ class Super_Train_Test_Class():
     def __train_or_load_model__(self, it, args, model, input_train_subset, output_train_subset):
         raise NotImplementedError('++++ ERROR: the __train_or_load_model__ method has not been implemented!')
 
-    # This functions decides if the ROC curve will be stored or not. It must be
-    # implemented by each subclass. By default, it does nothing.
     def __store_roc_curves__(self, experiment_name, roc_curves_list, output_path):
-        pass
+        fig, ax = plt.subplots()
+        ax.tick_params(top=False, labeltop=False, bottom=True, labelbottom=True)
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+        plt.title(experiment_name, fontsize=20)
+        plt.xlabel('False Positive Ratio', fontsize=10)
+        plt.ylabel('True Positive Ratio', fontsize=10)
+        legend = ['Random classifier']
+        it = 0
+        plt.plot(np.linspace(0, 1, 100), np.linspace(0, 1, 100), '--')
+
+        color = plt.cm.rainbow(np.linspace(0, 1, len(roc_curves_list)))
+        for current_metrics_values_aux, current_roc_curve_aux in roc_curves_list:
+            current_fpr, current_tpr, _ = current_roc_curve_aux
+            plt.plot(current_fpr, current_tpr, c=np.array([color[it]]))
+            recall = current_metrics_values_aux['recall']
+            specificity = current_metrics_values_aux['specificity']
+            plt.scatter(1.0-specificity, recall, c=np.array([color[it]]))
+            legend+=['roc_rep_%d = %.4f'%(it, auc(current_fpr, current_tpr)), 'metrics_rep_%d'%it]
+            it+=1
+
+        plt.legend(legend, fontsize="10")
+        plt.savefig(output_path)
 
     def execute_approach(self, args):
+        # warnings.filterwarnings('ignore')
         universal_factory = UniversalFactory()
 
         # Creating the splitting object with the universal factory.
@@ -46,16 +70,14 @@ class Super_Train_Test_Class():
         # Retrieving the feature selection method with the universal factory.
         kwargs = {'noftopfeatures': args.noftopfeatures, 'nofcomponents': args.nofcomponents}
         feature_retrieval = universal_factory.create_object(globals(), args.feature_retrieval + '_Feature_Retrieval', kwargs)
+        # Creating the object with the currently selected preprocessing approach.
+        kwargs = {}
+        preprocessing = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
 
         attrs_headers, input_data, output_data = splitting.load_dataset(args.dataset_path)
         # This list specifies if the attributes of the input dataset are categorical
         # or numerical.
         attrs_types_list = splitting.check_attrs_type(input_data)
-
-        # These lines execute the preprocessing step in case one was selected.
-        kwargs = {}
-        preprocessing = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
-        input_data, attrs_headers = preprocessing.execute_preprocessing(input_data.astype(np.float64), attrs_headers)
 
         # The input_data variable is overwritten with the data obtained after the
         # feature selection. If the user decided not to use feature selection, then
@@ -93,13 +115,24 @@ class Super_Train_Test_Class():
             output_train_subset = output_train_subset.astype(float).astype(int).astype(str)
             output_test_subset = output_test_subset.astype(float).astype(int).astype(str)
 
-            # Performing the balancing on the dataset.
             kwargs = {}
+            imputation_module = \
+                    universal_factory.create_object(globals(), args.imputation, kwargs)
+            input_train_subset, output_train_subset = \
+                    imputation_module.execute_imputation(input_train_subset, output_train_subset)
+
+            # Performing the balancing on the dataset.
+            kwargs = {'manual_seed': args.manual_seeds[it]}
             balancing_module = \
                     universal_factory.create_object(globals(), args.balancing + '_Balancing', kwargs)
-            attrs_types_tuple = top_features_categorical_attrs_headers, top_features_continuous_attrs_headers
+            top_features_tuple = top_features_categorical_attrs_headers, \
+                                 top_features_continuous_attrs_headers, \
+                                 top_features_attrs_headers
             input_train_subset, output_train_subset = \
-                    balancing_module.execute_balancing(input_train_subset, output_train_subset, attrs_types_tuple)
+                    balancing_module.execute_balancing(input_train_subset, output_train_subset, top_features_tuple)
+
+            input_train_subset, _, params = preprocessing.execute_preprocessing(input_train_subset.astype(np.float64), top_features_attrs_headers)
+            input_test_subset, _, _ = preprocessing.execute_preprocessing(input_test_subset.astype(np.float64), top_features_attrs_headers, params)
 
             # Creating the model with the universal factory.
             kwargs = {'n_neighbors': args.n_neighbors}
@@ -184,28 +217,3 @@ class Test_Class(Super_Train_Test_Class):
         model.load_model(current_model_path_to_load)
 
         return model
-
-    def __store_roc_curves__(self, experiment_name, roc_curves_list, output_path):
-        fig, ax = plt.subplots()
-        ax.tick_params(top=False, labeltop=False, bottom=True, labelbottom=True)
-        plt.xticks(fontsize=10)
-        plt.yticks(fontsize=10)
-        plt.title(experiment_name, fontsize=20)
-        plt.xlabel('False Positive Ratio', fontsize=10)
-        plt.ylabel('True Positive Ratio', fontsize=10)
-        legend = ['Random classifier']
-        it = 0
-        plt.plot(np.linspace(0, 1, 100), np.linspace(0, 1, 100), '--')
-
-        color = plt.cm.rainbow(np.linspace(0, 1, len(roc_curves_list)))
-        for current_metrics_values_aux, current_roc_curve_aux in roc_curves_list:
-            current_fpr, current_tpr, _ = current_roc_curve_aux
-            plt.plot(current_fpr, current_tpr, c=np.array([color[it]]))
-            recall = current_metrics_values_aux['recall']
-            specificity = current_metrics_values_aux['specificity']
-            plt.scatter(1.0-specificity, recall, c=np.array([color[it]]))
-            legend+=['roc_rep_%d'%it, 'metrics_rep_%d'%it]
-            it+=1
-
-        plt.legend(legend, fontsize="10")
-        plt.savefig(output_path)

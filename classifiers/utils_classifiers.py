@@ -17,34 +17,6 @@ class Super_Classifier_Class():
     def __init__(self, **kwargs):
         pass
 
-    def __get_optimal_point__(self, y_test, probabilities, partitions=100):
-        sorted_probabilities_idxs = np.argsort(probabilities)[::-1]
-        sorted_probabilities = probabilities[sorted_probabilities_idxs]
-        sorted_y_test = y_test[sorted_probabilities_idxs]
-        roc_curve = []
-        thresholds = []
-        best_balanced_accuracy = 0.0
-        for it in range(partitions + 1):
-            thresholds.append(it/partitions)
-            threshold_vector = np.greater_equal(sorted_probabilities, it/partitions).astype(int)
-            true_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 1)
-            true_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 0)
-            false_positive = np.equal(threshold_vector, 1) & np.equal(sorted_y_test, 0)
-            false_negative = np.equal(threshold_vector, 0) & np.equal(sorted_y_test, 1)
-
-            fpr = false_positive.sum()/(false_positive.sum() + true_negative.sum())
-            tpr = true_positive.sum()/(true_positive.sum() + false_negative.sum())
-
-            roc_curve.append([fpr, tpr])
-            balanced_accuracy = np.mean([1-fpr, tpr])
-            if (balanced_accuracy>=best_balanced_accuracy):
-                best_balanced_accuracy = balanced_accuracy
-                best_fpr = fpr
-                best_tpr = tpr
-                best_threshold = it/partitions
-
-        return best_fpr, best_tpr, best_threshold
-
     def __custom_roc_curve__(self, y_test, probabilities, partitions=100):
         sorted_probabilities_idxs = np.argsort(probabilities)[::-1]
         sorted_probabilities = probabilities[sorted_probabilities_idxs]
@@ -140,8 +112,8 @@ class Super_Classifier_Class():
 
         # fpr, tpr, thresholds = roc_curve(y_true=target, y_score=probabilities[:, 1])
         fpr, tpr, thresholds = self.__custom_roc_curve__(target, probabilities[:, 1])
-        best_fpr, best_tpr, best_threshold = self.__get_optimal_point__(target, probabilities[:, 1])
-        auc_roc = self.__custom_auc_function__(fpr, tpr, thresholds)
+        # auc_roc = self.__custom_auc_function__(fpr, tpr, thresholds)
+        auc_roc = auc(fpr, tpr)
 
         precision_list, recall_list, _ = precision_recall_curve(target, probabilities[:, 1])
         auc_pr = auc(recall_list, precision_list)
