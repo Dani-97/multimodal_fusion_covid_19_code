@@ -268,8 +268,7 @@ class SVM_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an SVM classifier')
-        # self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced')
-        self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced', gamma='auto')
+        self.classifier = svm.SVC(kernel='rbf', probability=True, class_weight='balanced')
 
     # The rest of the functions are inherited from the super class.
 
@@ -305,7 +304,6 @@ class XGBoost_Classifier(Super_Classifier_Class):
 
     def __init__(self, **kwargs):
         print('++++ Creating an XGBoost instance')
-        # self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1)
-        self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1, max_depth=2, gamma=10)
-
+        self.classifier = XGBClassifier(use_label_encoder=False, booster='dart', eta=0.1)
+        
     # The rest of the functions are inherited from the super class.

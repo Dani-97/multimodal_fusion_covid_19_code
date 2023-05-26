@@ -53,6 +53,14 @@ class Super_Feature_Retrieval():
         if (plot_data):
             plot_features_distribution(input_data, output_data)
 
+    def get_ordered_features_idxs(self):
+        if (self.noftopfeatures=='all'):
+            top_features_idxs = self.ordered_features_idxs
+        else:
+            top_features_idxs = self.ordered_features_idxs[list(range(0, int(self.noftopfeatures)))]
+
+        return top_features_idxs
+
     # This function stores in a csv file the report of the feature selection
     # or feature extraction process. By default, in this super class, it does
     # not do anything, so it works like an abstract method that must be
@@ -97,7 +105,10 @@ class Super_Feature_Retrieval():
         return filtered_features_list
 
     def get_ordered_top_features(self, attrs_headers, noftopfeatures):
-        ordered_top_features = np.array(attrs_headers)[self.ordered_features_idxs[:noftopfeatures]]
+        if (noftopfeatures=='all'):
+            ordered_top_features = np.array(attrs_headers)[self.ordered_features_idxs]
+        else:
+            ordered_top_features = np.array(attrs_headers)[self.ordered_features_idxs[:int(noftopfeatures)]]
 
         return ordered_top_features
 
@@ -146,7 +157,7 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
     def __init__(self, **kwargs):
         print('++++ The Variance Threshold algorithm has been chosen for feature selection')
         self.noftopfeatures = kwargs['noftopfeatures']
-        print('---- Number of top features: %d'%self.noftopfeatures)
+        print('---- Number of top features: %s'%self.noftopfeatures)
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         self.feature_selector = VarianceThreshold()
@@ -154,7 +165,7 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
 
         self.attrs_variances = self.feature_selector.variances_
         self.ordered_features_idxs = np.flip(np.argsort(self.attrs_variances))
-        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+        top_features_idxs = super().get_ordered_features_idxs()
 
         transformed_data = input_data[:, top_features_idxs]
 
@@ -243,7 +254,7 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
     def __init__(self, **kwargs):
         print('++++ The Fisher Score algorithm has been chosen for feature selection')
         self.noftopfeatures = kwargs['noftopfeatures']
-        print('---- Number of top features: %d'%self.noftopfeatures)
+        print('---- Number of top features: %s'%self.noftopfeatures)
 
     def __compute_fisher_score__(self, input_data, output_data):
         input_data = np.array(input_data).astype(np.float64)
@@ -290,10 +301,9 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
         return fisher_scores_list, fisher_idxs_list
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        self.features_scores, self.ordered_features_idxs = \
-            self.__compute_fisher_score__(input_data, output_data)
+        self.features_scores, self.ordered_features_idxs = self.__compute_fisher_score__(input_data, output_data)
 
-        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+        top_features_idxs = super().get_ordered_features_idxs()
         transformed_data = input_data[:, top_features_idxs]
 
         return transformed_data
@@ -376,13 +386,13 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
     def __init__(self, **kwargs):
         print('++++ The Mutual Information algorithm has been chosen for feature selection')
         self.noftopfeatures = kwargs['noftopfeatures']
-        print('---- Number of top features: %d'%self.noftopfeatures)
+        print('---- Number of top features: %s'%self.noftopfeatures)
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         self.features_scores = mutual_info_classif(input_data, output_data, random_state=5)
 
         self.ordered_features_idxs = np.flip(np.argsort(self.features_scores))
-        top_features_idxs = self.ordered_features_idxs[list(range(0, self.noftopfeatures))]
+        top_features_idxs = super().get_ordered_features_idxs()
 
         transformed_data = input_data[:, top_features_idxs]
 

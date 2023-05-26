@@ -36,7 +36,7 @@ def main():
                                               action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
                                               choices=['Holdout', 'Balanced_Holdout'], required=True)
-    parser.add_argument("--noftopfeatures", help="Number of top features to select from the ranking that was obtained with the feature selection algorithm", type=int)
+    parser.add_argument("--noftopfeatures", help="Number of top features to select from the ranking that was obtained with the feature selection algorithm", type=str)
     parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
     parser.add_argument('--nofsplits', help="Number of different holdouts to be performed or number of folds of the cross validation", type=int, required=True)
     parser.add_argument("--n_neighbors", help="Number of neighbors in case of training a kNN classifier", type=int)
@@ -60,6 +60,15 @@ def main():
     if ((args.manual_seeds is not None) and (len(args.manual_seeds)!=args.nofsplits)):
         print('++++ ERROR: if specified, the number of manual seeds must be the same as --nofsplits')
         exit(-1)
+
+    # We check if the variable can be converted to an integer.
+    # If not, then we check that the value is 'all'. Otherwise, the code will end in these lines.
+    try:
+        int(args.noftopfeatures)
+    except ValueError:
+        if (args.noftopfeatures!='all'):
+            print("++++ ERROR: the number of top features must be a number or the string 'all', but '%s' received!"%args.noftopfeatures)
+            exit(-1)
 
     test_class_obj = Test_Class()
     test_class_obj.execute_approach(args)
