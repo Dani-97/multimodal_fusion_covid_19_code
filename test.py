@@ -19,6 +19,7 @@ def main():
                             choices=['SVM_Classifier', 'kNN_Classifier', 'DT_Classifier', 'MLP_Classifier', 'XGBoost_Classifier', \
                                      'SVM_Regressor', 'Linear_Regressor', 'DT_Regressor'], required=True)
     parser.add_argument("--model_path", help="The path to the model that with 'rep_0', 'rep_1', 'rep_2'...", type=str, required=True)
+    parser.add_argument("--operation_point", help="Select the operation point of the classifier.", type=float, default=0.5)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
                             choices=['No', 'Standardization', 'Normalization'], required=True)

@@ -6,7 +6,8 @@ import os
 # If only_run_first_command is set to True, then only the first command will be
 # executed. This is useful if the first command fails, as it stops the whole
 # running. Interesting for debugging purposes.
-def execute_train(experiments_list):
+def __execution_scheme__(train_or_test, experiments_list):
+    # NOTE: train_or_test is a string, not a boolean.
     parser = argparse.ArgumentParser()
     parser.add_argument('--only_print', action='store_true', \
                    help='If specified, the commands will not be executed, only printed.' + \
@@ -21,7 +22,7 @@ def execute_train(experiments_list):
     if (args.only_run_first_command):
         experiments_list = [experiments_list[0]]
     for current_experiment_aux in experiments_list:
-        command_to_execute = 'python3 train.py' + ' '
+        command_to_execute = 'python3 %s.py'%train_or_test + ' '
         for current_param_key_aux in current_experiment_aux.keys():
             current_param_value_aux = current_experiment_aux[current_param_key_aux]
             if (current_param_value_aux=='store_true'):
@@ -34,3 +35,9 @@ def execute_train(experiments_list):
         print('##################################################################\n')
         if (not args.only_print):
             os.system(command_to_execute)
+
+def execute_train(experiments_list):
+    __execution_scheme__('train', experiments_list)
+
+def execute_test(experiments_list):
+    __execution_scheme__('test', experiments_list)

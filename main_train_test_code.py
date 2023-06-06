@@ -27,7 +27,7 @@ class UniversalFactory():
 class Super_Train_Test_Class():
 
     def __init__(self):
-        pass
+        self.operation_point = 0.5
 
     # This functions decides if the model will be trained or loaded from a
     # previous stored checkpoint. The method is just an interface, so it must
@@ -59,6 +59,11 @@ class Super_Train_Test_Class():
 
         plt.legend(legend, fontsize="10")
         plt.savefig(output_path)
+
+    # This model makes possible to save the model in training but not in testing reusing the 
+    # same code scheme for both cases.
+    def __save_trained_model__(self, it, args, model):
+        raise NotImplementedError('++++ ERROR: the method __save_trained_model__ must be implemented by the subclass!')
 
     def execute_approach(self, args):
         # warnings.filterwarnings('ignore')
@@ -149,22 +154,14 @@ class Super_Train_Test_Class():
             model = self.__train_or_load_model__(it, args, model, input_train_subset, output_train_subset)
 
             # Obtain metrics for test.
-            model_output_pred = model.test(input_test_subset)
+            model_output_pred = model.test(input_test_subset, self.operation_point)
             metrics_values = model.model_metrics(model_output_pred, output_test_subset)
 
             current_roc_curve = model.get_roc_curve(model_output_pred, output_test_subset)
             roc_curves_list.append((metrics_values, current_roc_curve))
 
-            model_filename = args.experiment_name + '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
-                               args.feature_retrieval + '_' + args.balancing + '_model'
-            model_file_full_path = \
-                '%s/%s_rep_%d.pkl'%(str(Path(args.logs_file_path).parent), model_filename, it)
-            model.save_model(model_file_full_path)
+            self.__save_trained_model__(it, args, model)
 
-            # roc_curve_filename = args.experiment_name + '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
-            #                    args.feature_retrieval + '_' + args.balancing + '_roc_curve'
-            # roc_curve_file_full_path = \
-            #     '%s/%s.npy'%(str(Path(args.logs_file_path).parent), roc_curve_filename)
             headers_list, metrics_values_list = convert_metrics_dict_to_list(metrics_values)
             if (it==0):
                 model.add_headers_to_csv_file(args.logs_file_path, headers_list)
@@ -190,7 +187,14 @@ class Super_Train_Test_Class():
 class Train_Class(Super_Train_Test_Class):
 
     def __init__(self):
-        pass
+        super().__init__()
+
+    def __save_trained_model__(self, it, args, model):
+        model_filename = args.experiment_name + '_' + args.model + '_' + str(args.noftopfeatures) + '_' + \
+                            args.feature_retrieval + '_' + args.balancing + '_model'
+        model_file_full_path = \
+                '%s/%s_rep_%d.pkl'%(str(Path(args.logs_file_path).parent), model_filename, it)
+        model.save_model(model_file_full_path)
 
     def __train_or_load_model__(self, it, args, model, input_train_subset, output_train_subset):
         model.train(input_train_subset, output_train_subset)
@@ -208,9 +212,14 @@ class Train_Class(Super_Train_Test_Class):
 class Test_Class(Super_Train_Test_Class):
 
     def __init__(self):
+        super().__init__()
+
+    # During the test phase, the models will not be stored.
+    def __save_trained_model__(self, it, args, model):
         pass
 
     def __train_or_load_model__(self, it, args, model, input_train_subset, output_train_subset):
+        self.operation_point = args.operation_point
         current_model_path_to_load = args.model_path.replace('.pkl', '')
         current_model_path_to_load = current_model_path_to_load + '_rep_%d.pkl'%it
         print('**** Loading the model %s...'%current_model_path_to_load)
