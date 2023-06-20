@@ -24,8 +24,10 @@ def main():
     parser.add_argument("--csv_file_name", type=str, required=True, \
             help="CSV filename where the report will be stored. " + \
                            "This filename is appended to dir_to_store_results")
-    parser.add_argument("--noftopfeatures", type=int, required=True, \
+    parser.add_argument("--noftopfeatures", type=str, required=True, \
             help="Number of top features that we want the algorithm to select")
+    parser.add_argument('--translations_csv_path', type=str, \
+        help='Path to the CSV file with the translations of the names of the headers.')
 
     args = parser.parse_args()
 
@@ -45,6 +47,7 @@ def main():
     feature_retrieval.execute_feature_retrieval(input_data, output_data)
     feature_retrieval.set_dir_to_store_results(args.dir_to_store_results)
     csv_file_path = args.dir_to_store_results + '/' + args.csv_file_name
+    attrs_headers = feature_retrieval.translate_headers(attrs_headers, args.translations_csv_path)
     feature_retrieval.store_report(csv_file_path, attrs_headers, False)
 
 main()

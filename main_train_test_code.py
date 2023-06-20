@@ -80,6 +80,13 @@ class Super_Train_Test_Class():
         preprocessing = universal_factory.create_object(globals(), args.preprocessing + '_Preprocessing', kwargs)
 
         attrs_headers, input_data, output_data = splitting.load_dataset(args.dataset_path)
+
+        # Check if the number of top features that we want to retrieve is lower or equal than the number of 
+        # features that the data have. In case the requested number is greater, then the execution will end.
+        if ((args.noftopfeatures!='all') and (int(args.noftopfeatures)>input_data.shape[1])):
+            print('++++ ERROR: The number of requested features is greater than the number of features that the data have!')
+            exit(-1)
+
         # This list specifies if the attributes of the input dataset are categorical
         # or numerical.
         attrs_types_list = splitting.check_attrs_type(input_data)

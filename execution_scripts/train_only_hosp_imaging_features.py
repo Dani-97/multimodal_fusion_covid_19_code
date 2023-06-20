@@ -1,16 +1,16 @@
 import os
 from utils_scripts_train import execute_train
 
-def obtain_params_for_experiment(noffeatures_list, experiment_name, classifier_model, balancing):
+def obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing):
     experiments_to_execute_list = []
     for noffeatures_aux in noffeatures_list:
-        logs_file_path = '../results_scenario_I/%s_%s_%s_features_%s.csv'%(experiment_name,
-                     classifier_model, noffeatures_aux, balancing)
+        logs_file_path = '../results_scenario_III/%s_%s_%s_features_%s_%s.csv'%(cohorts,
+                     classifier_model, noffeatures_aux, deep_features_scenario, balancing)
         current_exp_params = \
             {'logs_file_path': logs_file_path,
-             'experiment_name': experiment_name + '_' + balancing,
+             'experiment_name': cohorts + '_' + deep_features_scenario + '_' + balancing,
              'model': classifier_model,
-             'dataset_path': '../bspc_built_dataset/%s.csv'%(experiment_name),
+             'dataset_path': '../built_dataset/%s_%s.csv'%(cohorts, deep_features_scenario),
              'preprocessing': 'Normalization',
              'manual_seeds': '0 1 2 3 4',
              'imputation': 'No_Imputation_Model',
@@ -32,8 +32,9 @@ def main():
 
     experiments_to_execute_list = []
 
-    noffeatures_list = ['20', '28']
-    experiment_name = 'experiment_II'
+    noffeatures_list = ['20', '40', '60', '80', '100', '120', '140', '160', '180', '200', '400', '600', '800', '1000', 'all']
+    cohorts = 'only_hospitalized'
+    deep_features_scenario = 'vgg_16_fc8'
     balancing = 'Oversampling'
 
     # classifier_model = 'SVM_Classifier'
@@ -42,7 +43,7 @@ def main():
 
     classifier_model = 'XGBoost_Classifier'
 
-    experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, experiment_name, classifier_model, balancing)
+    experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
 
     # classifier_model = 'DT_Classifier'
 
