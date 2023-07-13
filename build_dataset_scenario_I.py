@@ -26,11 +26,15 @@ def main():
     parser.add_argument('--dataset_version', type=str, choices=['full', 'simplified'], required=True, \
                             help='Select if you want all the variables or you want to remove ' + \
                                 'the patients ids and drop the duplicates.')
+    parser.add_argument('--imaging_features_csv_path', type=str, \
+                            help='If specified, the clinical data will be filtered. Only those ' + \
+                                'patients with an imaging study will be stored to the build dataset.')
     args = parser.parse_args()
 
     universal_factory = UniversalFactory()
 
-    kwargs = {'input_csv_file_path': args.input_csv_file_path}
+    kwargs = {'input_csv_file_path': args.input_csv_file_path, \
+              'imaging_features_csv_path': args.imaging_features_csv_path}
     selected_approach = universal_factory.create_object(globals(), \
                                       'Build_Dataset_' + args.approach, kwargs)
 

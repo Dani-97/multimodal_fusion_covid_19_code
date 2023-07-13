@@ -30,6 +30,21 @@ class Super_Class_Build_Dataset():
                                              'fecha_exitus', 'biologicos_cuales', 'primera_fecha_seguimiento', \
                                              'distancia_temporal']
 
+    def __filter_cases_by_images_names_list__(self, clinical_data_df, imaging_data_df):
+        rxcodes_list = clinical_data_df['codigo']
+        columns_list = clinical_data_df.columns
+        filtered_clinical_df_rows_list = []
+        for current_rxcode_aux in rxcodes_list:
+            image_name_found = len(imaging_data_df.query("image_name=='rxcode_%d.jpg'"%current_rxcode_aux))>0
+            if (image_name_found):
+                current_code_data_row_aux = clinical_data_df.query('codigo==%d and distancia_temporal==0'%current_rxcode_aux).values.tolist()
+                filtered_clinical_df_rows_list += current_code_data_row_aux
+
+        clinical_data_df = pd.DataFrame(filtered_clinical_df_rows_list)
+        clinical_data_df.columns = columns_list
+
+        return clinical_data_df
+
     def __get_images_features__(self, selected_approach_obj):
         
         # This function obtains the outcome of a patient if the clinical data is 
@@ -84,19 +99,12 @@ class Super_Class_Build_Dataset():
             current_rxcode_info_df = clinical_data_df.query("codigo==%d"%current_image_rxcode)
             current_image_features_df_rows = imaging_data_df.query("image_name=='%s'"%current_image_name)
             
-            # If the image is not present in the filtered dataset, then the values will be filled with zeros.
+            # If the image is not present in the filtered dataset, then the values will be filled with -1.
             if (len(current_image_features_df_rows)>0):
                 current_image_features = current_image_features_df_rows[current_image_features_df_rows.columns[1:]].iloc[0]
-            else:
-                image_features_headers_list = imaging_data_df.columns[1:].tolist()
-                current_image_features = pd.DataFrame([-1]*len(image_features_headers_list))
-                current_image_features = current_image_features.T
-                current_image_features.columns = image_features_headers_list
-                current_image_features = current_image_features.T
-
-            current_patient_clinical_data = current_rxcode_info_df.iloc[0]
-            current_merged_features_df = pd.concat([current_image_features, current_patient_clinical_data])
-            global_merged_features_df = pd.concat([global_merged_features_df, current_merged_features_df], axis=1)
+                current_patient_clinical_data = current_rxcode_info_df.iloc[0]
+                current_merged_features_df = pd.concat([current_image_features, current_patient_clinical_data])
+                global_merged_features_df = pd.concat([global_merged_features_df, current_merged_features_df], axis=1)
 
             it+=1
 
@@ -165,8 +173,12 @@ class Super_Class_Build_Dataset():
         raise NotImplementedError('++++ The method build_full_dataset_scenario_I has not been implemented for this approach!')
 
     def build_simplified_dataset_scenario_I(self):
-        _, rows_df = self.build_full_dataset_scenario_I()
-        self.df_unique_values = rows_df.drop(['codigo'] + self.dropped_cols_in_simp_version, axis=1).drop_duplicates()
+        _, clinical_data_df = self.build_full_dataset_scenario_I()
+
+        imaging_data_df = pd.read_csv(self.imaging_features_csv_path)
+        clinical_data_df = self.__filter_cases_by_images_names_list__(clinical_data_df, imaging_data_df)
+
+        self.df_unique_values = clinical_data_df.drop(['codigo'] + self.dropped_cols_in_simp_version, axis=1).drop_duplicates()
         self.df_unique_values = self.df_unique_values.drop(['patient_id'], axis=1)
 
         return self.df_unique_values.columns, self.df_unique_values
@@ -209,6 +221,11 @@ class Build_Dataset_Hospitalized_And_Urgencies(Super_Class_Build_Dataset):
     def __init__(self, **kwargs):
         super().__init__()
         self.input_csv_file_path = kwargs['input_csv_file_path']
+        self.imaging_features_csv_path = None
+        try:
+            self.imaging_features_csv_path = kwargs['imaging_features_csv_path']
+        except KeyError:
+            pass
 
     def build_full_dataset_scenario_I(self):
         self.input_dataset_df = pd.read_csv(self.input_csv_file_path)
@@ -230,6 +247,11 @@ class Build_Dataset_Only_Hospitalized(Super_Class_Build_Dataset):
     def __init__(self, **kwargs):
         super().__init__()
         self.input_csv_file_path = kwargs['input_csv_file_path']
+        self.imaging_features_csv_path = None
+        try:
+            self.imaging_features_csv_path = kwargs['imaging_features_csv_path']
+        except KeyError:
+            pass
 
     def build_full_dataset_scenario_I(self):
         self.input_dataset_df = pd.read_csv(self.input_csv_file_path)

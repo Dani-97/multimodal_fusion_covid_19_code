@@ -4,13 +4,13 @@ from utils_scripts_train import execute_train
 def obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing):
     experiments_to_execute_list = []
     for noffeatures_aux in noffeatures_list:
-        logs_file_path = '../results_scenario_III/%s_%s_%s_features_%s_%s.csv'%(cohorts,
+        logs_file_path = '../results_scenario_II/%s_%s_%s_features_%s_%s.csv'%(cohorts,
                      classifier_model, noffeatures_aux, deep_features_scenario, balancing)
         current_exp_params = \
             {'logs_file_path': logs_file_path,
              'experiment_name': cohorts + '_' + deep_features_scenario + '_' + balancing,
              'model': classifier_model,
-             'dataset_path': '../built_dataset/%s_%s.csv'%(cohorts, deep_features_scenario),
+             'dataset_path': '../built_dataset/%s_%s_only_imaging_features.csv'%(cohorts, deep_features_scenario),
              'preprocessing': 'Normalization',
              'manual_seeds': '0 1 2 3 4',
              'imputation': 'No_Imputation_Model',
@@ -32,30 +32,16 @@ def main():
 
     experiments_to_execute_list = []
 
-    noffeatures_list = ['20', '40', '60', '80', '100', '120', '140', '160', '180', '200', '400', '600', '800', '1000', 'all']
-    cohorts = 'only_hospitalized'
-    deep_features_scenario = 'vgg_16_fc8'
+    noffeatures_list = list(map(lambda input_value: str(input_value), list(range(20, 4000, 20)))) + ['all']
+    cohorts_list = ['hospitalized_and_urgencies', 'only_hospitalized']
+    deep_features_scenario = ['vgg_16_fc6', 'vgg_16_fc7', 'vgg_16_fc8']
     balancing = 'Oversampling'
-
-    # classifier_model = 'SVM_Classifier'
-
-    # experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
 
     classifier_model = 'XGBoost_Classifier'
 
-    experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
-
-    # classifier_model = 'DT_Classifier'
-
-    # experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
-
-    # classifier_model = 'kNN_Classifier'
-
-    # experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
-
-    # classifier_model = 'MLP_Classifier'
-
-    # experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, cohorts, deep_features_scenario, classifier_model, balancing)
+    for current_cohort_aux in cohorts_list:
+        for current_deep_features_scenario in deep_features_scenario:
+            experiments_to_execute_list+=obtain_params_for_experiment(noffeatures_list, current_cohort_aux, current_deep_features_scenario, classifier_model, balancing)
 
     execute_train(experiments_to_execute_list)
 

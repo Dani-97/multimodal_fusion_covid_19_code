@@ -69,24 +69,25 @@ def obtain_metrics_from_csv_file(csv_file_path, csv_only_filename):
             # output_dict['auc_pr'] = '%.4f+-%.4f'%auc_pr
 
         if (len(top_features_list)>0):
-            # Example: if the number of top features is 20, then this list will only
-            # retrieve the first 20 features. If the number is "all", then it will be
-            # the whole top_features_list.
-            if (output_dict['noftopfeatures']=='all'):
-                only_selected_top_features_list = top_features_list
-            else:
-                noftopfeatures = int(output_dict['noftopfeatures'])
-                only_selected_top_features_list = top_features_list[:noftopfeatures] 
+            if (len(output_dict)>0):
+                # Example: if the number of top features is 20, then this list will only
+                # retrieve the first 20 features. If the number is "all", then it will be
+                # the whole top_features_list.
+                if (output_dict['noftopfeatures']=='all'):
+                    only_selected_top_features_list = top_features_list
+                else:
+                    noftopfeatures = int(output_dict['noftopfeatures'])
+                    only_selected_top_features_list = top_features_list[:noftopfeatures] 
                 
-            imaging_features_list = list(filter(lambda input_value: input_value.find('feature_')!=-1, only_selected_top_features_list))
-            nof_imaging_features = len(imaging_features_list)
+                imaging_features_list = list(filter(lambda input_value: input_value.find('feature_')!=-1, only_selected_top_features_list))
+                nof_imaging_features = len(imaging_features_list)
             
-            clinical_features_list = list(filter(lambda input_value: input_value.find('feature_')==-1, only_selected_top_features_list))
-            nof_clinical_features = len(clinical_features_list)
+                clinical_features_list = list(filter(lambda input_value: input_value.find('feature_')==-1, only_selected_top_features_list))
+                nof_clinical_features = len(clinical_features_list)
             
-            # Include the statistics related with the number of clinical features and the number of imaging features.
-            output_dict['nof_imaging_features'] = nof_imaging_features
-            output_dict['nof_clinical_features'] = nof_clinical_features
+                # Include the statistics related with the number of clinical features and the number of imaging features.
+                output_dict['nof_imaging_features'] = nof_imaging_features
+                output_dict['nof_clinical_features'] = nof_clinical_features
 
     return output_dict
 
@@ -103,7 +104,8 @@ def main():
         if (file_name_aux.find('.csv')!=-1):
             full_file_path = '%s/%s'%(input_root_dir, file_name_aux)
             metrics_values = obtain_metrics_from_csv_file(full_file_path, file_name_aux)
-            metrics_values_list.append(metrics_values)
+            if (len(metrics_values)>0):
+                metrics_values_list.append(metrics_values)
 
     metrics_values_df = pd.DataFrame(metrics_values_list)
     metrics_values_df.to_csv(args.output_csv_file_path, index=False)
