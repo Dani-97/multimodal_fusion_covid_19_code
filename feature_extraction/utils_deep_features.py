@@ -5,6 +5,7 @@ from PIL import Image
 import segmentation_models_pytorch as smp
 import timm
 import torch
+import torch.nn as nn
 import torchvision
 import torchvision.transforms.functional as TF
 import transformers
@@ -73,6 +74,23 @@ class Super_Model_Class():
     def extract_features(self, input_image_array):
         return self.extract_deep_features(input_image_array)
 
+class Super_ProgPred_Class():
+
+    def __init__(self):
+        pass
+
+    def apply_progression_model(self, input_data):
+        pass
+
+
+class No_Deep_Features_Model(Super_Model_Class):
+
+    def __init__(self, **kwargs):
+        self.headers_list = []
+
+    def extract_deep_features(self, input_data):
+        return [], []
+
 class VGG_16_Deep_Features_Model(Super_Model_Class):
 
     def __init__(self, **kwargs):
@@ -127,53 +145,36 @@ class VGG_16_Deep_Features_Model(Super_Model_Class):
 
     # The rest of the methods are implemented in the parent class.
 
-class Mixed_Vision_Transformer_Model(Super_Model_Class):
+class LSTM_ProgPred_Model(Super_ProgPred_Class):
 
     def __init__(self, **kwargs):
-        self.deep_features_model = smp.FPN(encoder_name="mit_b0", encoder_weights="imagenet", in_channels=3, classes=1)
+        super().__init__()
         self.device = kwargs['device']
-        self.layer = kwargs['layer']
+        self.nof_imaging_features = kwargs['nof_imaging_features']
+        self.lstm_model = nn.LSTM(self.nof_imaging_features, self.nof_imaging_features)
 
-    # The parameter 'layer' can be 'layer1', 'layer2', 'layer3'.
-    def extract_deep_features(self, input_data):
         universal_factory = UniversalFactory()
         kwargs = {}
         device_chosen = 'Move_To_' + self.device
-        move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
+        self.move_to_device_module = universal_factory.create_object(globals(), device_chosen, kwargs)
 
-        self.deep_features_model.eval()
-        self.deep_features_model = move_to_device_module.execute_move_to_device(self.deep_features_model)
+        self.lstm_model = self.move_to_device_module.execute_move_to_device(self.lstm_model)
 
-        input_data = input_data.repeat(1, 3, 1, 1)
-        input_data = move_to_device_module.execute_move_to_device(input_data)
-        output_encoder = self.deep_features_model.encoder(input_data)
+    def apply_progression_model(self, input_df):
+        imaging_features_headers = list(filter(lambda input_value: input_value.find('feature_')!=-1, input_df.columns))
+        nof_imaging_features = len(imaging_features_headers)
 
-        if (self.layer=='all'):
-            output_feats_layers = []
+        deep_features = input_df[imaging_features_headers].values
 
-            output_feats_layers.append(np.mean(output_encoder[1].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
-            output_feats_layers.append(np.mean(output_encoder[2].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
-            output_feats_layers.append(np.mean(output_encoder[3].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
-            output_feats_layers.append(np.mean(output_encoder[4].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
-            output_feats_layers.append(np.mean(output_encoder[5].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel())
+        for current_image_features_aux in deep_features:
+            deep_features_tensor = torch.FloatTensor(current_image_features_aux).unsqueeze(0).unsqueeze(0)
+            deep_features_tensor = self.move_to_device_module.execute_move_to_device(deep_features_tensor)
 
-            output_feats_layers = np.concatenate(output_feats_layers)
-        else:
-            layer_int_idx = int(self.layer.replace('layer', ''))
-            output_feats_layers = np.mean(output_encoder[layer_int_idx].cpu().detach().numpy()[0, :, :, :], axis=(1, 2)).ravel()
+            rand_hidden_state = self.move_to_device_module.execute_move_to_device(torch.randn(1, 1, nof_imaging_features))
+            hidden = (rand_hidden_state, rand_hidden_state)
 
-        output_feats_layers = output_feats_layers.tolist()
-        headers_list = []
-        for it in range(0, len(output_feats_layers)):
-            headers_list.append('feature_%d'%it)
-        self.headers_list = headers_list
+            lstm_output, hidden = self.lstm_model(deep_features_tensor, hidden)
 
-        return headers_list, output_feats_layers
+            final_output = lstm_output.tolist()[0][0]
 
-class No_Deep_Features_Model(Super_Model_Class):
-
-    def __init__(self, **kwargs):
-        self.headers_list = []
-
-    def extract_deep_features(self, input_data):
-        return [], []
+        return final_output

@@ -1,6 +1,9 @@
 import argparse
 from dataset.utils_build_datasets import Build_Dataset_VGG_16_Model_Only_Hospitalized
 from dataset.utils_build_datasets import Build_Dataset_VGG_16_Model_Hospitalized_And_Urgencies
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_All_Cases
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_Hospitalized_And_Urgencies
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_Only_Hospitalized
 
 class UniversalFactory():
 
@@ -17,7 +20,9 @@ def main():
     parser.add_argument('--images_dir_root', help="Path of the directory with the input images", required=True)
     parser.add_argument('--input_csv_file_path', help="Path of the input table CSV with clinical data", required=True)
     parser.add_argument('--approach', type=str, help='This specifies the selected approach', required=True, \
-                choices=['VGG_16_Model_Only_Hospitalized', 'VGG_16_Model_Hospitalized_And_Urgencies'])
+                        choices=['VGG_16_Model_All_Cases', 'VGG_16_Model_Hospitalized_And_Urgencies', 'VGG_16_Model_Only_Hospitalized', \
+                                 'VGG_16_ProgPred_Model_All_Cases', 'VGG_16_ProgPred_Model_Hospitalized_And_Urgencies', \
+                                 'VGG_16_ProgPred_Model_Only_Hospitalized'])
     parser.add_argument('--imaging_features_csv_path', type=str, \
                 help='If specified, the features of the images will be retrieved from here instead of being calculated.')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', required=True)

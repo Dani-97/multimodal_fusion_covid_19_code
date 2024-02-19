@@ -2,6 +2,9 @@ import argparse
 from dataset.utils_build_datasets import Build_Dataset_VGG_16_Model_All_Cases
 from dataset.utils_build_datasets import Build_Dataset_VGG_16_Model_Hospitalized_And_Urgencies
 from dataset.utils_build_datasets import Build_Dataset_VGG_16_Model_Only_Hospitalized
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_All_Cases
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_Hospitalized_And_Urgencies
+from dataset.utils_build_datasets import Build_Dataset_VGG_16_ProgPred_Model_Only_Hospitalized
 
 class UniversalFactory():
 
@@ -15,11 +18,12 @@ class UniversalFactory():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--images_dir_root", help="Path of the directory with the input images", required=True)
+    parser.add_argument("--images_dir_root", help= "Path of the directory with the input images", required=True)
     parser.add_argument("--input_csv_file_path", help="Path of the input table CSV with clinical data", required=True)
     parser.add_argument('--approach', type=str, help='This specifies the selected approach', required=True, \
-                        choices=['VGG_16_Model_All_Cases', 'VGG_16_Model_Hospitalized_And_Urgencies', \
-                                 'VGG_16_Model_Only_Hospitalized'])
+                        choices=['VGG_16_Model_All_Cases', 'VGG_16_Model_Hospitalized_And_Urgencies', 'VGG_16_Model_Only_Hospitalized', \
+                                 'VGG_16_ProgPred_Model_All_Cases', 'VGG_16_ProgPred_Model_Hospitalized_And_Urgencies', \
+                                 'VGG_16_ProgPred_Model_Only_Hospitalized'])
     parser.add_argument('--precomputed_imaging_features_csv_path', type=str, \
                         help='If the features of all the images were obtained, they can be loaded instead of calculated online.')
     parser.add_argument('--output_path', type=str, help='Path where the built dataset will be stored', required=True)
@@ -32,7 +36,7 @@ def main():
 
     universal_factory = UniversalFactory()
 
-    kwargs = {'images_dir_root': args.images_dir_root, 
+    kwargs = {'images_dir_root': args.images_dir_root,
               'input_csv_file_path': args.input_csv_file_path,
               'imaging_features_csv_path': args.precomputed_imaging_features_csv_path,
               'device': args.device,
