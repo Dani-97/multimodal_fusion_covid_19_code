@@ -63,6 +63,30 @@ class Preprocess_Dataset():
         input_df.insert(len(input_df.columns), 'primera_fecha_seguimiento', first_following_dates_list)
 
         return input_df
+    
+    def __add_last_following_date__(self, input_df):
+        patients_ids_list = input_df['patient_id'].values
+        last_following_dates_list = []
+        for patient_id_aux in patients_ids_list:
+            format_dates_func = lambda input_value: datetime.strptime(input_value, '%d/%m/%Y')
+            following_dates_list = list(map(format_dates_func, input_df.query("patient_id==%d"%patient_id_aux)['fecha_seguimiento'].values))
+            last_following_date = np.max(following_dates_list)
+            last_following_dates_list.append(last_following_date)
+        input_df.insert(len(input_df.columns), 'ultima_fecha_seguimiento', last_following_dates_list)
+
+        return input_df
+
+    def __add_whole_followup_time__(self, input_df):
+        patients_ids_list = input_df['patient_id'].values
+        whole_followup_times_list = []
+        for patient_id_aux in patients_ids_list:
+            format_dates_func = lambda input_value: datetime.strptime(input_value, '%d/%m/%Y')
+            following_dates_list = list(map(format_dates_func, input_df.query("patient_id==%d"%patient_id_aux)['fecha_seguimiento'].values))
+            whole_followup_time = (np.max(following_dates_list) - np.min(following_dates_list)).days
+            whole_followup_times_list.append(whole_followup_time)
+        input_df.insert(len(input_df.columns), 'tiempo_total_seguimiento', whole_followup_times_list)
+
+        return input_df
 
     # This function converts all the values of the dataset to numerical.
     def __preprocess_dataset__(self, original_input_dataset, headers_file):
@@ -125,6 +149,8 @@ class Preprocess_Dataset():
         current_column = 'biologicos_cuales'
         self.df_preprocessed_data.insert(6, current_column, self.original_dataset_df[current_column])
         self.df_preprocessed_data = self.__add_first_following_date__(self.df_preprocessed_data)
+        self.df_preprocessed_data = self.__add_last_following_date__(self.df_preprocessed_data)
+        self.df_preprocessed_data = self.__add_whole_followup_time__(self.df_preprocessed_data)
         
         format_dates_func = lambda input_value: datetime.strptime(input_value, '%d/%m/%Y')
         current_following_date_df = self.df_preprocessed_data['fecha_seguimiento'].apply(format_dates_func)
