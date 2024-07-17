@@ -156,7 +156,7 @@ class Super_Feature_Retrieval():
         return translated_attrs_headers
         
     def __store_report_to_csv__(self, csv_file_path, attrs_headers, append=True):
-        report_list = []
+        reports_list = []
         if (append):
             file_mode = 'a'
         else:
@@ -165,18 +165,12 @@ class Super_Feature_Retrieval():
         attrs_headers = np.array(attrs_headers)
         it = 0
         for feature_idx_aux in self.ordered_features_idxs:
-            current_line_str_aux = '%d: %s (score: %.4f)'%(feature_idx_aux, \
-                            np.array(attrs_headers)[feature_idx_aux], \
-                                self.features_scores[feature_idx_aux])
-            report_list.append(current_line_str_aux)
+            reports_list.append([it+1, np.array(attrs_headers)[feature_idx_aux], self.features_scores[feature_idx_aux]])
             it+=1
-
-        with open(csv_file_path, file_mode) as csv_file:
-            csv_writer = csv.writer(csv_file, delimiter=',')
-
-            csv_writer.writerow(['top_features'])
-            csv_writer.writerow(report_list)
-            csv_writer.writerow([])
+        
+        reports_df = pd.DataFrame(reports_list)
+        reports_df.columns = ['index', 'feature_name', 'score']
+        reports_df.to_csv(csv_file_path, index=False)
 
     # This function plots the report of the scores and the ranking of the
     # attributes after the feature selection algorithm is applied.
@@ -198,34 +192,34 @@ class Super_Feature_Retrieval():
 
         attrs_headers_to_disp = self.__associate_global_idxs_to_headers__(attrs_headers_to_disp, clinical_features_global_idxs)
 
-        plt.rcParams['font.size'] = '50'
-        plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = False
-        plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
+        plt.rcParams['font.size'] = '10'
+        plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = True
+        plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = False
 
-        _, ax = plt.subplots(figsize=(30, 30))
-        y_pos = list(range(len(features_scores_to_disp)))
+        _, ax = plt.subplots(figsize=(10, 4))
+        y_pos = np.array(list(range(len(features_scores_to_disp))))
 
         my_cmap = plt.get_cmap("Purples")
         rescale = lambda y: (y - np.min(y)) / (np.max(y) - np.min(y))
-        ax.tick_params(labelbottom=False,labeltop=True)
-        ax.barh(y_pos, features_scores_to_disp, edgecolor='black', align='center', color='lightblue')
-        ax.invert_yaxis()
+        ax.tick_params(labelbottom=True, labeltop=False)
+        ax.bar(y_pos, features_scores_to_disp, edgecolor='black', align='center', color='lightblue', width=0.75)
+        # ax.invert_yaxis()
 
-        plt.yticks(y_pos, np.array(attrs_headers_to_disp))
-        plt.xscale('log')
+        plt.xticks(y_pos, np.array(attrs_headers_to_disp), rotation=-45, ha='left')
+        # plt.xscale('log')
 
-        xlim_left, xlim_right = 10**(-5), 10**(-1)
-        plt.xlim([xlim_left, xlim_right])
-        plt.subplots_adjust(left=0.45, bottom=0.05, right=0.90, top=0.97)
+        # xlim_left, xlim_right = 10**(-5), 10**(-1)
+        # plt.xlim([xlim_left, xlim_right])
+        plt.subplots_adjust(left=0.10, bottom=0.4, right=0.90, top=0.97)
 
-        output_pdf_filename = csv_file_path.replace('.csv', '') + '%s.pdf'%self.output_pdf_suffix
-        output_filename = '%s/%s'%(dir_to_store_results, output_pdf_filename)
-        plt.savefig(output_filename)
-        print('++++ The report of %s score top features ranking has been stored at %s'%(self.approach_name, output_filename))
+        output_pdf_filename = csv_file_path.replace('.csv', '') + '%s.pdf'%(self.output_pdf_suffix)
+        # output_filename = '%s/%s'%(dir_to_store_results, output_pdf_filename)
+        plt.savefig(output_pdf_filename)
+        print('++++ The report of %s score top features ranking has been stored at %s'%(self.approach_name, output_pdf_filename))
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
         self.__store_report_to_csv__(csv_file_path, attrs_headers, append)
-        self.__plot_report__(attrs_headers, self.dir_to_store_results, csv_file_path)
+        # self.__plot_report__(attrs_headers, self.dir_to_store_results, csv_file_path)
 
 # An object of this class will be instantiated if no feature selection was
 # chosen.
@@ -239,7 +233,11 @@ class No_Feature_Retrieval(Super_Feature_Retrieval):
     # desired and possible, the data will be plotted.
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         super().execute_feature_retrieval(input_data, output_data, plot_data)
+        features_idxs = np.array(list(range(0, len(input_data))))
 
+        return features_idxs
+
+    def apply_feature_ranking_transform(self, input_data, top_features_idxs):
         return input_data
 
     def store_report(self, csv_file_path, attrs_headers, append=True):
@@ -262,6 +260,9 @@ class VarianceThreshold_Feature_Retrieval(Super_Feature_Retrieval):
         self.ordered_features_idxs = np.flip(np.argsort(self.features_scores))
         top_features_idxs = super().get_ordered_features_idxs()
 
+        return top_features_idxs
+
+    def apply_feature_ranking_transform(self, input_data, top_features_idxs):
         transformed_data = input_data[:, top_features_idxs]
 
         return transformed_data
@@ -321,8 +322,11 @@ class Fisher_Feature_Retrieval(Super_Feature_Retrieval):
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         self.features_scores, self.ordered_features_idxs = self.__compute_fisher_score__(input_data, output_data)
-
         top_features_idxs = super().get_ordered_features_idxs()
+
+        return top_features_idxs
+
+    def apply_feature_ranking_transform(self, input_data, top_features_idxs):
         transformed_data = input_data[:, top_features_idxs]
 
         return transformed_data
@@ -338,29 +342,12 @@ class MutualInformation_Feature_Retrieval(Super_Feature_Retrieval):
 
     def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
         self.features_scores = mutual_info_classif(input_data, output_data, random_state=5)
-
         self.ordered_features_idxs = np.flip(np.argsort(self.features_scores))
         top_features_idxs = super().get_ordered_features_idxs()
 
+        return top_features_idxs
+
+    def apply_feature_ranking_transform(self, input_data, top_features_idxs):
         transformed_data = input_data[:, top_features_idxs]
 
         return transformed_data
-
-class PCA_Feature_Retrieval(Super_Feature_Retrieval):
-
-    def __init__(self, **kwargs):
-        print('++++ The PCA algorithm has been chosen for feature selection')
-        self.nofcomponents = kwargs['nofcomponents']
-        print('---- Number of components: %d'%self.nofcomponents)
-
-    def execute_feature_retrieval(self, input_data, output_data, plot_data=False):
-        pca = PCA(n_components=self.nofcomponents)
-
-        pca.fit(input_data, output_data)
-        transformed_data = pca.transform(input_data)
-        super().execute_feature_retrieval(transformed_data, output_data, plot_data)
-
-        return transformed_data
-
-    def store_report(self, csv_file_path, attrs_headers, append=True):
-        print('+++++ WARNING: the method store_report is not implemented for PCA!')

@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--operation_point", help="Select the operation point of the classifier.", type=float, default=0.5)
     parser.add_argument("--dataset_path", help="Path where the dataset is stored", required=True)
     parser.add_argument("--preprocessing", help="The preprocessing method that is desired to be selected", \
-                            choices=['No', 'Standardization', 'Normalization'], required=True)
+                            choices=['No', 'Normalization', 'Standardization'], required=True)
     parser.add_argument("--manual_seeds", type=int, nargs='+', \
                             help="If specified, the dataset splitting will be done considering these seeds.")
     parser.add_argument("--balancing", help="This decides the kind of dataset balancing to use", required=True, \
@@ -32,13 +32,13 @@ def main():
     parser.add_argument("--csv_path_with_attrs_types", help="This determines the path to a CSV file that specifies if a variable is categorical or continuous.", required=True, \
                                               type=str)
     parser.add_argument("--feature_retrieval", help="Selected algorithm for feature selection or extraction. Choose 'No' to avoid feature retrieval", required=True, \
-                                              choices=['No', 'PCA', 'VarianceThreshold', 'Fisher', 'MutualInformation'])
+                                              choices=['No', 'VarianceThreshold', 'Fisher', 'MutualInformation'])
     parser.add_argument("--store_features_selection_report", help="If this option is selected, then the features selection report will be stored to the logging results file", \
                                               action='store_true')
     parser.add_argument("--splitting", help="Choose the kind of dataset splitting method to use", \
-                                              choices=['Holdout', 'Balanced_Holdout'], required=True)
+                                              choices=['Cross_Val_And_Holdout'], required=True)
     parser.add_argument("--noftopfeatures", help="Number of top features to select from the ranking that was obtained with the feature selection algorithm", type=str)
-    parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
+    # parser.add_argument("--nofcomponents", help="Number of components to be extracted with the PCA algorithm", type=int)
     parser.add_argument('--nofsplits', help="Number of different holdouts to be performed or number of folds of the cross validation", type=int, required=True)
     parser.add_argument("--n_neighbors", help="Number of neighbors in case of training a kNN classifier", type=int)
     parser.add_argument("--test_size", help="Size of the the test subset (in percentage) in case of using Holdout", type=float)
@@ -49,9 +49,9 @@ def main():
     if ((args.model=='kNN') and (args.n_neighbors is None)):
         print('++++ ERROR: if you choose the kNN algorithm, you need to specify the --n_neighbors argument')
         exit(-1)
-    if ((args.feature_retrieval=='PCA') and (args.nofcomponents is None)):
-        print('++++ ERROR: if you choose the PCA algorithm, you need to specify the --nofcomponents argument')
-        exit(-1)
+    # if ((args.feature_retrieval=='PCA') and (args.nofcomponents is None)):
+    #     print('++++ ERROR: if you choose the PCA algorithm, you need to specify the --nofcomponents argument')
+    #     exit(-1)
     if ((args.feature_retrieval=='RBFSampler') and (args.nofcomponents is None)):
         print('++++ ERROR: if you choose RBFSampler algorithm, you need to specify the --nofcomponents argument')
         exit(-1)
